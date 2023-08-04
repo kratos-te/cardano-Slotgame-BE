@@ -32,16 +32,18 @@ cron.schedule("*/10 * * * * *", async function () {
       'project_id': config.BLOCKFROST_API_KEY
     }
   });
-  const transactions = await instance.get('/addresses/addr_test1vq6wpgx36vestuh4p68yvqcxadd5mj7r9qztzev5gyegxggffwej8/transactions', { order: "desc" }).then(response => response.data).catch(error => {
+  const transactions = await instance.get('/addresses/addr_test1vq6wpgx36vestuh4p68yvqcxadd5mj7r9qztzev5gyegxggffwej8/transactions?order=desc').then(response => response.data).catch(error => {
     console.log(error);
     return [];
   });
   // console.log("txdata", transactions)
   (transactions.forEach(async(transaction) => {
-   
     const hash = transaction.tx_hash.toString()
     const pendingData = await getPendingData(hash)
-    if (pendingData) {
+    console.log("hash",hash, ":", pendingData)
+    if (pendingData && pendingData.action == "deposit" ) {
+      console.log("deposit", pendingData.action)
+
       const hashTable = pendingData.hash
       console.log( "hashs",  hashTable)
       const hashData = await instance.get('/txs/' + hashTable).then(response => response.data).catch(error => {
@@ -54,22 +56,73 @@ cron.schedule("*/10 * * * * *", async function () {
       }
       if (pendingData && pendingData.status == "confirmed") {
         const data = await loadUserData(pendingData.from_address);
-        const ada_deposited = parseFloat(pendingData.ada_balance) + parseFloat(data.ada_balance)
-        const dum_deposited = parseFloat(pendingData.dum_balance) + parseFloat(data.dum_balance)
-        const nebula_deposited = parseFloat(pendingData.nebula_balance) + parseFloat(data.nebula_balance)
-        const konda_deposited = parseFloat(pendingData.konda_balance) + parseFloat(data.konda_balance)
-        console.log("DATA:  ", data);
+        if (!data) {
+          const ada_deposited = parseFloat(pendingData.ada_balance) + 0
+          const dum_deposited = parseFloat(pendingData.dum_balance) + 0
+          const nebula_deposited = parseFloat(pendingData.nebula_balance) + 0
+          const konda_deposited = parseFloat(pendingData.konda_balance) + 0
+          console.log("DATA:  ", data);
+          const dataResult = {
+            nebula_balance: nebula_deposited,
+            dum_balance: dum_deposited,
+            konda_balance: konda_deposited,
+            ada_balance: ada_deposited,
+          };
+          const userData = await addUser(pendingData.from_address, ada_deposited, dum_deposited, nebula_deposited, konda_deposited)
+        } else {
+          const ada_deposited = parseFloat(pendingData.ada_balance) + parseFloat(data.ada_balance)
+          const dum_deposited = parseFloat(pendingData.dum_balance) + parseFloat(data.dum_balance)
+          const nebula_deposited = parseFloat(pendingData.nebula_balance) + parseFloat(data.nebula_balance)
+          const konda_deposited = parseFloat(pendingData.konda_balance) + parseFloat(data.konda_balance)
+          console.log("DATA:  ", data);
+          const dataResult = {
+            nebula_balance: nebula_deposited,
+            dum_balance: dum_deposited,
+            konda_balance: konda_deposited,
+            ada_balance: ada_deposited,
+          };
+          const deletePending = await deletePendingData(pendingData.hash)
+          if (data.address == pendingData.from_address) {
+            const updateData = await updateUserData(pendingData.from_address, dataResult)
+          } else {
+            const userData = await addUser(pendingData.from_address, ada_balance, dum_balance, nebula_balance, konda_balance)
+          }
+        }
+      }
+    }
+    if (pendingData && pendingData.action == "withdraw") {
+      console.log("withdraw", pendingData.action)
+      const hashTable = pendingData.hash
+      console.log( "hashs",  hashTable)
+      const hashData = await instance.get('/txs/' + hashTable).then(response => response.data).catch(error => {
+        console.log(error);
+        return [];
+      });
+      if (hashData.valid_contract == true) {
+        const status = "confirmed"
+        const updatePending = await updatePendingData(hashTable, status)
+      }
+      if (pendingData && pendingData.status == "confirmed") {
+        const data = await loadUserData(pendingData.to_address);
+        console.log( "data", data)
+        const ada_withdraw = parseFloat(data.ada_balance) - parseFloat(pendingData.ada_balance)
+        const dum_withdraw = parseFloat(data.dum_balance) - parseFloat(pendingData.dum_balance)
+        const nebula_withdraw = parseFloat(data.nebula_balance) - parseFloat(pendingData.nebula_balance)
+        const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance)
+
         const dataResult = {
-          nebula_balance: nebula_deposited,
-          dum_balance: dum_deposited,
-          konda_balance: konda_deposited,
-          ada_balance: ada_deposited,
+          nebula_balance: nebula_withdraw,
+          dum_balance: dum_withdraw,
+          konda_balance: konda_withdraw,
+          ada_balance: ada_withdraw,
         };
         const deletePending = await deletePendingData(pendingData.hash)
-        if (data.address == pendingData.from_address) {
-          const updateData = await updateUserData(pendingData.from_address, dataResult)
+        if (data.ada_balance <= pendingData.ada_balance) {
+          console.log("ADA Amount Exceed");
+          res.send(JSON.stringify(-100));
         } else {
-          const userData = await addUser(pendingData.from_address, ada_balance, dum_balance, nebula_balance, konda_balance)
+          console.log("Good", data.ada_balance > pendingData.ada_balance )
+          const updateData = await updateUserData(pendingData.to_address, dataResult)
         }
       }
     }
@@ -93,34 +146,19 @@ app.post("/deposit", async (req, res) => {
   const konda_balance = req.body.konda_balance;
   const txhash = req.body.txHash;
 
-  const data = await loadUserData(from_address);
-
-  const ada_deposited = parseFloat(ada_balance) + parseFloat(data.ada_balance)
-  const dum_deposited = parseFloat(dum_balance) + parseFloat(data.dum_balance)
-  const nebula_deposited = parseFloat(nebula_balance) + parseFloat(data.nebula_balance)
-  const konda_deposited = parseFloat(konda_balance) + parseFloat(data.konda_balance)
-
-  const dataResult = {
-    nebula_balance: nebula_deposited,
-    dum_balance: dum_deposited,
-    konda_balance: konda_deposited,
-    ada_balance: ada_deposited,
-  };
-
-  if (to_address !== config.OWNER_WALLET) { 
-    res.status(400).send("Invalid target address");
-    return;
-  }
-
-  const status = "Checking"
-  const addPendingData = await savePendingData(from_address, to_address, ada_balance, dum_balance, nebula_balance, konda_balance, txhash, status );
-
+    if (to_address !== config.OWNER_WALLET) { 
+      res.status(400).send("Invalid target address");
+      return;
+    }
+  
+    const status = "Checking"
+    const addPendingData = await savePendingData(from_address, to_address, ada_balance, dum_balance, nebula_balance, konda_balance, txhash, status, "deposit" );
   // Await until pending Tx will remove in DB
   await new Promise(async (resolve, reject) => { 
     const itvl = setInterval(async () => {
       try {
         const pendingData = await getPendingData(txhash)
-        console.log("Check", pendingData)
+        // console.log("Check", pendingData)
         if (pendingData == null) {
           res.send(JSON.stringify(200));
           clearInterval(itvl);
@@ -431,8 +469,27 @@ app.post("/withdrawFund", async (req, res) => {
       return;
     } else {
       console.log("nice!")
-      const res = await Withdraw(ada)
-      const updateData = await updateUserData(wallet, dataResult)
+      const txHash = await Withdraw(ada, address)
+      const status = "Checking"
+      const addPendingData = await savePendingData(config.OWNER_WALLET, address, ada, dum, nebula, konda, txHash, status, "withdraw" );
+      await new Promise(async (resolve, reject) => { 
+        const itvl = setInterval(async () => {
+          try {
+            const pendingData = await getPendingData(txHash)
+            // console.log("Check", pendingData)
+            if (pendingData == null) {
+              res.send(JSON.stringify(200));
+              clearInterval(itvl);
+              resolve(1);
+            }
+          } catch (e) {
+            console.error(e);
+            res.status(500).send("DB operation failed");
+            clearInterval(itvl);
+            reject(e);
+          }
+        }, 10000);
+      });
     }
 
 
@@ -465,7 +522,7 @@ app.post("/withdrawFund", async (req, res) => {
     //   saveData(dataResult);
     // }
 
-    res.send(JSON.stringify(200));
+    // res.send(JSON.stringify(200));
   }
 });
 

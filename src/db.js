@@ -103,7 +103,7 @@ export const updateUserData = async (address, dataResult) => {
     }
 }
 
-export const savePendingData = async (from_address, to_address, ada_balance, dum_balance, nebula_balance, konda_balance, hash, status) => {
+export const savePendingData = async (from_address, to_address, ada_balance, dum_balance, nebula_balance, konda_balance, hash, status, action) => {
     if (!from_address && !to_address) return null
     try {
         const newPendingData = new pendingModel({
@@ -114,7 +114,8 @@ export const savePendingData = async (from_address, to_address, ada_balance, dum
             nebula_balance: nebula_balance,
             konda_balance: konda_balance,
             hash: hash,
-            status: status
+            status: status,
+            action: action
         })
         newPendingData.save(function (err) {
             if (err) return console.log(err);

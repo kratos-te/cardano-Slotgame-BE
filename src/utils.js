@@ -131,14 +131,15 @@ export const mint = async () => {
   const txHash = await signedTx.submit();
 };
 
-export const Withdraw = async (amount) => { 
+export const Withdraw = async (amount, address) => { 
   const tx = new Transaction({ initiator: wallet }).sendLovelace(
-    config.DEMO_WALLET,
+    address,
     (amount * 1000000).toString()
   );
   const unsignedTx = await tx.build();
   const signedTx = await wallet.signTx(unsignedTx);
   const txHash = await wallet.submitTx(signedTx);
+  return txHash.toString();
 }
 
 

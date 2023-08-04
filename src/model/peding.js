@@ -9,7 +9,8 @@ const pendingSchema = new mongoose.Schema(
         nebula_balance: Number,
         konda_balance: Number,
         hash: String,
-        status: String
+        status: String,
+        action: String,
     },
     {
         timestamps: {
