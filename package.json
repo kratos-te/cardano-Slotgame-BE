@@ -1,5 +1,5 @@
 {
-  "name": "sports-betting",
+  "name": "slot-backend",
   "version": "1.0.0",
   "type": "module",
   "description": "",
@@ -9,15 +9,12 @@
     "start": "nodemon --ignore database/ src/index.js"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dev-tom-0108/Sports_Betting_API.git"
+    "type": "git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dev-tom-0108/Sports_Betting_API/issues"
   },
-  "homepage": "https://github.com/dev-tom-0108/Sports_Betting_API#readme",
   "devDependencies": {
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
