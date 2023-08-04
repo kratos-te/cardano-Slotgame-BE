@@ -17,6 +17,7 @@ dotenv.config({
 
 const app = express();
 const server = http.createServer(app);
+server.timeout = 180000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -40,12 +41,12 @@ cron.schedule("*/10 * * * * *", async function () {
   (transactions.forEach(async(transaction) => {
     const hash = transaction.tx_hash.toString()
     const pendingData = await getPendingData(hash)
-    console.log("hash",hash, ":", pendingData)
+    // console.log("hash",hash, ":", pendingData)
     if (pendingData && pendingData.action == "deposit" ) {
       console.log("deposit", pendingData.action)
 
       const hashTable = pendingData.hash
-      console.log( "hashs",  hashTable)
+      // console.log( "hashs",  hashTable)
       const hashData = await instance.get('/txs/' + hashTable).then(response => response.data).catch(error => {
         console.log(error);
         return [];
@@ -292,7 +293,7 @@ app.post("/play", async (req, res) => {
       // adaBase += 0.5;
     }
     if (token === "ada") {
-      adaBase -= 2;
+      adaBase -= 1;
       adaBase -= score;
       adaBase += getAmount;
       // adaBase -= getAmount;
