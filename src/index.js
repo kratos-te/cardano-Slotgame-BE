@@ -17,6 +17,7 @@ dotenv.config({
 
 const app = express();
 const server = http.createServer(app);
+server.timeout = 180000;
 
 app.use(cors());
 app.use(bodyParser.json());
