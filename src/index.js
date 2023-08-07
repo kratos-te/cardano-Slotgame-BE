@@ -10,6 +10,9 @@ import { Withdraw, checkTransaction, loadData, mint, saveData, withdrawFromProje
 import { init, addUser, loadUserData, updateUserData, savePendingData, getPendingData, updatePendingData,deletePendingData } from "./db.js";
 import { config } from "./config.js";
 
+let probability = [Math.pow(0.1/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3) + Math.pow(0.001/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3) + Math.pow(0.001/9, 1/3) + Math.pow(0.0001/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3) + Math.pow(0.001/9, 1/3) + Math.pow(0.0001/9, 1/3) + Math.pow(0.000001/9, 1/3)];
+
+
 // load the environment variables from the .env file
 dotenv.config({
   path: ".env",
@@ -227,21 +230,39 @@ app.post("/play", async (req, res) => {
     }
 
     let result = [];
-    for (let i = 0; i < 5; i++) {
-      let a = new Array(TOTAL).fill(0);
-      for (let j = 0; j < 3; j++) {
-        let rand, num;
-        do {
-          rand = Math.random();
-          num = Math.floor(1000 * rand) % TOTAL;
-        } while (a[num] == 1);
-        result.push(num);
-        a[num] = 1;
+    for (let i = 0; i < 15; i++) {
+      let rand = Math.random();
+      let number =  Math.floor(Math.random() * 18) + 6;
+      for(let j=0; j<probability.length; j++){
+        if(rand < probability[j]){
+          number = j;
+          break;
+        }
       }
+      result.push(number);
     }
+    // for (let i = 0; i < 5; i++) {
+    //   let a = new Array(TOTAL).fill(0);
+    //   for (let j = 0; j < 3; j++) {
+    //     let rand, num;
+    //     do {
+    //       rand = Math.random();
+    //       num = Math.floor(1000 * rand) % TOTAL;
+    //     } while (a[num] == 1);
+    //     result.push(num);
+    //     a[num] = 1;
+    //   }
+    // }
     console.log("Result: ", result);
 
-    let maxCount = 0;
+    let palnetMaxCount = 0;
+    let rocketMaxCount = 0;
+    let nebulaMaxCount = 0;
+    let jetpackMaxCount = 0;
+    let meteorMaxCount = 0;
+    let robotMaxCount = 0;
+
+
     // Reward Logic
     for (let i = 0; i < 15; i++) {
       let count = 0;
@@ -253,19 +274,108 @@ app.post("/play", async (req, res) => {
         } while (result[i] == 0);
       }
 
-      if (maxCount < count) maxCount = count;
+      if (palnetMaxCount < count) palnetMaxCount = count;
     }
-    console.log(maxCount);
+    for (let i = 0; i < 15; i++) {
+      let count = 0;
+      if (result[i] === 1) {
+        do {
+          console.log("ID:   ", i);
+          i += 3;
+          count++;
+        } while (result[i] == 1);
+      }
+
+      if (rocketMaxCount < count) rocketMaxCount = count;
+    }
+    for (let i = 0; i < 15; i++) {
+      let count = 0;
+      if (result[i] === 2) {
+        do {
+          console.log("ID:   ", i);
+          i += 3;
+          count++;
+        } while (result[i] == 2);
+      }
+
+      if (nebulaMaxCount < count) nebulaMaxCount = count;
+    }
+    for (let i = 0; i < 15; i++) {
+      let count = 0;
+      if (result[i] === 3) {
+        do {
+          console.log("ID:   ", i);
+          i += 3;
+          count++;
+        } while (result[i] == 3);
+      }
+
+      if (jetpackMaxCount < count) jetpackMaxCount = count;
+    }
+    for (let i = 0; i < 15; i++) {
+      let count = 0;
+      if (result[i] === 4) {
+        do {
+          console.log("ID:   ", i);
+          i += 3;
+          count++;
+        } while (result[i] == 4);
+      }
+
+      if (meteorMaxCount < count) meteorMaxCount = count;
+    }
+    for (let i = 0; i < 15; i++) {
+      let count = 0;
+      if (result[i] === 5) {
+        do {
+          console.log("ID:   ", i);
+          i += 3;
+          count++;
+        } while (result[i] == 5);
+      }
+
+      if (robotMaxCount < count) robotMaxCount = count;
+    }
+    console.log("palnetMaxCount:", palnetMaxCount);
+    console.log("rocketMaxCount:", rocketMaxCount);
+    console.log("nebulaMaxCount:", nebulaMaxCount);
+    console.log("jetpackMaxCount:", jetpackMaxCount);
+    console.log("meteorMaxCount:", meteorMaxCount);
+    console.log("robotMaxCount:", robotMaxCount);
+
+
 
     let getAmount = 0;
     let multiplier = 0;
-    if (maxCount === 2) {
-      getAmount = (score * 12) / 10;
-      multiplier = 1.2;
-    } else if (maxCount >= 3) {
+    // if (palnetMaxCount === 2) {
+    //   getAmount = (score * 12) / 10;
+    //   multiplier = 1.2;
+    // } else
+      if (palnetMaxCount >= 3) {
       getAmount = (score * 15) / 10;
       multiplier = 1.5;
     }
+    if (rocketMaxCount >= 3) {
+      getAmount = (score * 20) / 10;
+      multiplier = 2.0;
+    }
+    if (nebulaMaxCount >= 3) {
+      getAmount = (score * 30) / 10;
+      multiplier = 3.0;
+    }
+    if (jetpackMaxCount >= 3) {
+      getAmount = (score * 36) / 10;
+      multiplier = 3.6;
+    }
+    if (meteorMaxCount >= 3) {
+      getAmount = (score * 50) / 10;
+      multiplier = 5.0;
+    }
+    if (robotMaxCount >= 3) {
+      getAmount = (score * 100) / 10;
+      multiplier = 10.0;
+    }
+
 
     console.log("Get Amount:  ", getAmount);
 
