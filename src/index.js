@@ -10,7 +10,7 @@ import { Withdraw, checkTransaction, loadData, mint, saveData, withdrawFromProje
 import { init, addUser, loadUserData, updateUserData, savePendingData, getPendingData, updatePendingData,deletePendingData } from "./db.js";
 import { config } from "./config.js";
 
-let probability = [Math.pow(0.1/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3) + Math.pow(0.001/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3) + Math.pow(0.001/9, 1/3) + Math.pow(0.0001/9, 1/3), Math.pow(0.1/9, 1/3) + Math.pow(0.05/9, 1/3) + Math.pow(0.01/9, 1/3) + Math.pow(0.001/9, 1/3) + Math.pow(0.0001/9, 1/3) + Math.pow(0.000001/9, 1/3)];
+let probability = [Math.pow(0.34/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3) + Math.pow(0.0002/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3) + Math.pow(0.0002/9, 1/3) + Math.pow(0.0001/9, 1/3)];
 
 
 // load the environment variables from the .env file
@@ -273,7 +273,7 @@ app.post("/play", async (req, res) => {
           count++;
         } while (result[i] == 0);
       }
-
+      console.log("palnetMaxCount", count);
       if (palnetMaxCount < count) palnetMaxCount = count;
     }
     for (let i = 0; i < 15; i++) {
@@ -285,8 +285,8 @@ app.post("/play", async (req, res) => {
           count++;
         } while (result[i] == 1);
       }
-
-      if (rocketMaxCount < count) rocketMaxCount = count;
+      console.log("rocketMaxCount", count);
+      if (rocketMaxCount <= count) rocketMaxCount = count;
     }
     for (let i = 0; i < 15; i++) {
       let count = 0;
@@ -297,7 +297,7 @@ app.post("/play", async (req, res) => {
           count++;
         } while (result[i] == 2);
       }
-
+      console.log("nebulaMaxCount", count);
       if (nebulaMaxCount < count) nebulaMaxCount = count;
     }
     for (let i = 0; i < 15; i++) {
@@ -309,7 +309,7 @@ app.post("/play", async (req, res) => {
           count++;
         } while (result[i] == 3);
       }
-
+      console.log("jetpackMaxCount", count);
       if (jetpackMaxCount < count) jetpackMaxCount = count;
     }
     for (let i = 0; i < 15; i++) {
@@ -321,7 +321,7 @@ app.post("/play", async (req, res) => {
           count++;
         } while (result[i] == 4);
       }
-
+      console.log("meteorMaxCount", count);
       if (meteorMaxCount < count) meteorMaxCount = count;
     }
     for (let i = 0; i < 15; i++) {
@@ -333,7 +333,7 @@ app.post("/play", async (req, res) => {
           count++;
         } while (result[i] == 5);
       }
-
+      console.log("robotMaxCount", count);
       if (robotMaxCount < count) robotMaxCount = count;
     }
     console.log("palnetMaxCount:", palnetMaxCount);
