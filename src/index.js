@@ -229,6 +229,11 @@ app.post("/play", async (req, res) => {
       return;
     }
 
+
+    let bang = [false, false, false, false, false, false];
+    let focus = 6;
+    let freq = 0;
+
     let result = [];
     for (let i = 0; i < 15; i++) {
       let rand = Math.random();
@@ -238,6 +243,17 @@ app.post("/play", async (req, res) => {
           number = j;
           break;
         }
+      }
+      if(number != focus || i%5 == 0){
+        focus = number;
+        freq = 1;
+      } else {
+        freq++;
+      }
+      if(focus < 6 && freq == 3){
+        console.log(focus);
+        bang[focus] = true;
+        freq = 0;
       }
       result.push(number);
     }
@@ -254,6 +270,7 @@ app.post("/play", async (req, res) => {
     //   }
     // }
     console.log("Result: ", result);
+    console.log("bang:", bang )
 
     let palnetMaxCount = 0;
     let rocketMaxCount = 0;
@@ -261,122 +278,39 @@ app.post("/play", async (req, res) => {
     let jetpackMaxCount = 0;
     let meteorMaxCount = 0;
     let robotMaxCount = 0;
-
-
-    // Reward Logic
-    for (let i = 0; i < 15; i++) {
-      let count = 0;
-      if (result[i] === 0) {
-        do {
-          console.log("ID:   ", i);
-          i += 3;
-          count++;
-        } while (result[i] == 0);
-      }
-      console.log("palnetMaxCount", count);
-      if (palnetMaxCount < count) palnetMaxCount = count;
-    }
-    for (let i = 0; i < 15; i++) {
-      let count = 0;
-      if (result[i] === 1) {
-        do {
-          console.log("ID:   ", i);
-          i += 3;
-          count++;
-        } while (result[i] == 1);
-      }
-      console.log("rocketMaxCount", count);
-      if (rocketMaxCount <= count) rocketMaxCount = count;
-    }
-    for (let i = 0; i < 15; i++) {
-      let count = 0;
-      if (result[i] === 2) {
-        do {
-          console.log("ID:   ", i);
-          i += 3;
-          count++;
-        } while (result[i] == 2);
-      }
-      console.log("nebulaMaxCount", count);
-      if (nebulaMaxCount < count) nebulaMaxCount = count;
-    }
-    for (let i = 0; i < 15; i++) {
-      let count = 0;
-      if (result[i] === 3) {
-        do {
-          console.log("ID:   ", i);
-          i += 3;
-          count++;
-        } while (result[i] == 3);
-      }
-      console.log("jetpackMaxCount", count);
-      if (jetpackMaxCount < count) jetpackMaxCount = count;
-    }
-    for (let i = 0; i < 15; i++) {
-      let count = 0;
-      if (result[i] === 4) {
-        do {
-          console.log("ID:   ", i);
-          i += 3;
-          count++;
-        } while (result[i] == 4);
-      }
-      console.log("meteorMaxCount", count);
-      if (meteorMaxCount < count) meteorMaxCount = count;
-    }
-    for (let i = 0; i < 15; i++) {
-      let count = 0;
-      if (result[i] === 5) {
-        do {
-          console.log("ID:   ", i);
-          i += 3;
-          count++;
-        } while (result[i] == 5);
-      }
-      console.log("robotMaxCount", count);
-      if (robotMaxCount < count) robotMaxCount = count;
-    }
-    console.log("palnetMaxCount:", palnetMaxCount);
-    console.log("rocketMaxCount:", rocketMaxCount);
-    console.log("nebulaMaxCount:", nebulaMaxCount);
-    console.log("jetpackMaxCount:", jetpackMaxCount);
-    console.log("meteorMaxCount:", meteorMaxCount);
-    console.log("robotMaxCount:", robotMaxCount);
-
-
-
     let getAmount = 0;
     let multiplier = 0;
-    // if (palnetMaxCount === 2) {
-    //   getAmount = (score * 12) / 10;
-    //   multiplier = 1.2;
-    // } else
-      if (palnetMaxCount >= 3) {
-      getAmount = (score * 15) / 10;
-      multiplier = 1.5;
-    }
-    if (rocketMaxCount >= 3) {
-      getAmount = (score * 20) / 10;
-      multiplier = 2.0;
-    }
-    if (nebulaMaxCount >= 3) {
-      getAmount = (score * 30) / 10;
-      multiplier = 3.0;
-    }
-    if (jetpackMaxCount >= 3) {
-      getAmount = (score * 36) / 10;
-      multiplier = 3.6;
-    }
-    if (meteorMaxCount >= 3) {
-      getAmount = (score * 50) / 10;
-      multiplier = 5.0;
-    }
-    if (robotMaxCount >= 3) {
-      getAmount = (score * 100) / 10;
-      multiplier = 10.0;
+
+    for (let i = 0; i < bang.length; i++) {
+      if (bang[i] == true) {
+        if (i == 0) {
+          getAmount = (score * 15) / 10;
+          multiplier = 1.5;
+        }
+        if (i == 1) {
+          getAmount = (score * 20) / 10;
+          multiplier = 2.0;
+        }
+        if (i == 2) {
+          getAmount = (score * 30) / 10;
+          multiplier = 3.0;
+        }
+        if (i == 3) {
+          getAmount = (score * 36) / 10;
+          multiplier = 3.6;
+        }
+        if (i == 4) {
+          getAmount = (score * 50) / 10;
+          multiplier = 5.0;
+        }
+        if (i == 5) {
+          getAmount = (score * 100) / 10;
+          multiplier = 10.0;
+        }
+      }
     }
 
-
+    // Reward Logic
     console.log("Get Amount:  ", getAmount);
 
     if (token === "nebula") {
@@ -418,10 +352,19 @@ app.post("/play", async (req, res) => {
       ada_balance: adaBase,
     };
 
-    console.log("Result: ", result);
     console.log("remaining balance", adaBase, dumBase, nebulaBase, kondaBase)
 
     updateUserData(address, dataResult);
+
+    //arrage result
+    let arranged_result = [];
+    for (let i = 0; i < 5; i++){
+      arranged_result.push(result[i]);
+      arranged_result.push(result[5+i]);
+      arranged_result.push(result[10+i]);
+    }
+
+    console.log("arranged_result: ", arranged_result);
 
     const totalResult = {
       bet: {
@@ -429,7 +372,7 @@ app.post("/play", async (req, res) => {
         multiplier: multiplier,
         getAmount: getAmount,
       },
-      result: result,
+      result: arranged_result,
       userData: {
         ada: adaBase,
         nebula: nebulaBase,
