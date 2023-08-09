@@ -20,7 +20,7 @@ dotenv.config({
 
 const app = express();
 const server = http.createServer(app);
-server.timeout = 180000;
+server.timeout = 300000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -272,12 +272,6 @@ app.post("/play", async (req, res) => {
     console.log("Result: ", result);
     console.log("bang:", bang )
 
-    let palnetMaxCount = 0;
-    let rocketMaxCount = 0;
-    let nebulaMaxCount = 0;
-    let jetpackMaxCount = 0;
-    let meteorMaxCount = 0;
-    let robotMaxCount = 0;
     let getAmount = 0;
     let multiplier = 0;
 
