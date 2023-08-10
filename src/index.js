@@ -510,7 +510,7 @@ app.post("/withdrawFund", async (req, res) => {
       return;
     }
 
-    if (parseInt(data.ada_balance) <= parseFloat(ada)) {
+    if (parseInt(data.ada_balance) < parseFloat(ada)) {
       console.log("ADA Amount Exceed");
       res.send(JSON.stringify(-100));
      

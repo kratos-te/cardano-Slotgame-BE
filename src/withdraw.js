@@ -17,7 +17,7 @@ const Withdraw = async () => {
     // console.log("transaction",wallet)
     const tx = new Transaction({ initiator: wallet }).sendLovelace(
         config.DEMO_WALLET,
-        "5000000000"
+        "100000000"
     );
       const unsignedTx = await tx.build();
       const signedTx = await wallet.signTx(unsignedTx);
