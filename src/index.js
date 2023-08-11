@@ -121,7 +121,7 @@ cron.schedule("*/10 * * * * *", async function () {
           ada_balance: ada_withdraw,
         };
         const deletePending = await deletePendingData(pendingData.hash)
-        if (data.ada_balance <= pendingData.ada_balance) {
+        if (data.ada_balance < pendingData.ada_balance) {
           console.log("ADA Amount Exceed");
           res.send(JSON.stringify(-100));
         } else {
