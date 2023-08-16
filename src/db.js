@@ -45,6 +45,28 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
     }
 };
 
+export const addGamePlay = async(address, ada_balance, dum_balance, nebula_balance, konda_balance) => {
+    try {
+        let ts = new Date()
+        
+        const newGamePlay = new gameModel({
+            address: address,
+            ada_balance: ada_balance,
+            dum_balance: dum_balance,
+            nebula_balance: nebula_balance,
+            konda_balance: konda_balance,
+
+        })
+
+        newGamePlay.save(function (err, book) {
+            if (err) return console.error(err);
+            console.log(newGamePlay, "Saved Successful")
+        })
+    } catch (error) {
+        console.log("error");
+    }
+};
+
 export const addGame = async (address, token, amount) => {
     try {
         const newGame = new gameModel({
@@ -91,6 +113,18 @@ export const loadUserData = async (address) => {
     }
 }
 
+export const loadPlayData = async (address) => {
+    if(!address) return null
+    try {
+       
+        const res = await gameModel.findOne({ address })
+
+        return res
+    }catch (error) {
+        console.log("error");
+    }
+}
+
 
 export const updateUserData = async (address, dataResult) => {
     if (!address) return null
@@ -98,6 +132,17 @@ export const updateUserData = async (address, dataResult) => {
         const filter = { address: address }
         
         const res = await usersModel.findOneAndUpdate(filter, dataResult,  { new: true })
+    } catch (error) {
+        console.log("update error");
+    }
+}
+
+export const updatePlayData = async (address, dataResult) => {
+    if (!address) return null
+    try {
+        const filter = { address: address }
+        
+        const res = await gameModel.findOneAndUpdate(filter, dataResult,  { new: true })
     } catch (error) {
         console.log("update error");
     }

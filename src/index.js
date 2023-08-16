@@ -332,7 +332,7 @@ app.post("/play", async (req, res) => {
     }
     if (token === "ada") {
       adaBase -= 1;
-      adaBase -= score;
+      adaBase -= score-1;
       adaBase += getAmount;
       // adaBase -= getAmount;
       // adaBase += 0.5;
@@ -348,7 +348,13 @@ app.post("/play", async (req, res) => {
 
     console.log("remaining balance", adaBase, dumBase, nebulaBase, kondaBase)
 
-    updateUserData(address, dataResult);
+    if (multiplier !== 0) {
+      setTimeout(() => {
+        updateUserData(address, dataResult);
+      }, 10000);
+    } else {
+      updateUserData(address, dataResult);
+    }
 
     //arrage result
     let arranged_result = [];

@@ -3,11 +3,12 @@ import mongoose from "mongoose";
 const gameSchema = new mongoose.Schema(
     {
         address: String,
-        bet_amount: Array({
-            token: String,
-            amount: Number,
-        }),
-        times:Number
+        ada_balance: Number,
+        dum_balance: Number,
+        nebula_balance: Number,
+        konda_balance: Number,  
+        bet_amount: Number,
+        multiplier:Number
     },
     {
         timestamps: {
