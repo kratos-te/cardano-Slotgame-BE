@@ -332,7 +332,7 @@ app.post("/play", async (req, res) => {
     }
     if (token === "ada") {
       adaBase -= 1;
-      adaBase -= score-1;
+      adaBase -= score;
       adaBase += getAmount;
       // adaBase -= getAmount;
       // adaBase += 0.5;
