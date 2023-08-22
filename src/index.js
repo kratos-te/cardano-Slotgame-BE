@@ -465,7 +465,8 @@ app.post("/withdrawFund", async (req, res) => {
 
 // make server listen on some port
 ((port = process.env.APP_PORT || 5000) => {
-  server.listen(port, () => {
+  server.listen(port, (res, req) => {
+    res.setHeader('Access-Control-Allow-Origin', 'https://www.spacerace.site');
     console.log(`>> Listening on port ${port}`);
     return;
   });
