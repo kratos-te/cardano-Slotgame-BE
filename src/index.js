@@ -18,15 +18,12 @@ dotenv.config({
   path: ".env",
 });
 
-const corsOptions = {
-  origin: 'https://www.spacerace.site'
-};
 
 const app = express();
 const server = http.createServer(app);
 server.timeout = 600000;
 
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -465,8 +462,7 @@ app.post("/withdrawFund", async (req, res) => {
 
 // make server listen on some port
 ((port = process.env.APP_PORT || 5000) => {
-  server.listen(port, (res, req) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://www.spacerace.site');
+  server.listen(port, () => {
     console.log(`>> Listening on port ${port}`);
     return;
   });
