@@ -18,11 +18,15 @@ dotenv.config({
   path: ".env",
 });
 
+const corsOptions = {
+  origin: 'https://www.spacerace.site'
+};
+
 const app = express();
 const server = http.createServer(app);
 server.timeout = 600000;
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -190,21 +194,11 @@ app.post("/play", async (req, res) => {
 
     const data = await loadUserData(wallet);
 
-    // let database = data.db;
-    // let nebulaBase = data.nebula;
-    // let dumBase = data.dum;
-    // let kondaBase = data.konda;
-    // let adaBase = data.ada;
-
     let address = data.address;
     let nebulaBase = data.nebula_balance;
     let dumBase = data.dum_balance;
     let kondaBase = data.konda_balance;
     let adaBase = data.ada_balance;
-
-
-
-    // const index = database.findIndex((obj) => obj.wallet === wallet);
 
     if (address !== wallet) {
       res.send(JSON.stringify(501));
@@ -228,7 +222,6 @@ app.post("/play", async (req, res) => {
       res.send(JSON.stringify(401));
       return;
     }
-
 
     let bang = [false, false, false, false, false, false];
     let focus = 6;
@@ -257,18 +250,6 @@ app.post("/play", async (req, res) => {
       }
       result.push(number);
     }
-    // for (let i = 0; i < 5; i++) {
-    //   let a = new Array(TOTAL).fill(0);
-    //   for (let j = 0; j < 3; j++) {
-    //     let rand, num;
-    //     do {
-    //       rand = Math.random();
-    //       num = Math.floor(1000 * rand) % TOTAL;
-    //     } while (a[num] == 1);
-    //     result.push(num);
-    //     a[num] = 1;
-    //   }
-    // }
     console.log("Result: ", result);
     console.log("bang:", bang )
 
@@ -394,82 +375,16 @@ app.post("/getAmount", async (req, res) => {
     const wallet = req.body.wallet;
     console.log("wallet addre", wallet)
     const data = await loadUserData(wallet);
-    // const address = data.address;
-    // const index = database.findIndex((obj) => obj.wallet === wallet);
     
     return res.send(data);
   } catch  (error) {
     console.log(error, ">>>> Error in Playing Game");
   }
 
-  // if (address !== wallet) {
-  //   // res.send(JSON.stringify(-100));
-  //   return data;
-  // } else {
-  //   const result = data;
-  //   return result;
-  // }
-});
-
-app.post("/depositFund", async (req, res) => {
-  const wallet = req.body.wallet;
-  const nScore = req.body.nebula;
-  const dScore = req.body.dum;
-  const sScore = req.body.konda;
-  const aScore = req.body.ada;
-
-  const data =  await loadUserData(wallet);
- 
-  let database = data.db;
-  const index = database.findIndex((obj) => obj.wallet === wallet);
-
-  const txDatas = await checkTransaction()
-  if (index === -1) {
-    const newData = {
-      wallet: wallet,
-      nebula: parseFloat(nScore),
-      dum: parseFloat(dScore),
-      konda: parseFloat(sScore),
-      ada: parseFloat(aScore),
-    };
-    database.push(newData);
-    const dataResult = {
-      db: database,
-      nebula: data.nebula,
-      dum: data.dum,
-      konda: data.konda,
-      ada: data.ada,
-    };
-    saveData(dataResult);
-    res.send(JSON.stringify(200));
-  } else {
-    database[index] = {
-      wallet: wallet,
-      nebula: database[index].nebula + parseFloat(nScore),
-      dum: database[index].dum + parseFloat(dScore),
-      konda: database[index].konda + parseFloat(sScore),
-      ada: database[index].ada + parseFloat(aScore),
-    };
-    const dataResult = {
-      db: database,
-      nebula: data.nebula,
-      dum: data.dum,
-      konda: data.konda,
-      ada: data.ada,
-    };
-    saveData(dataResult);
-
-    res.send(JSON.stringify(200));
-  }
 });
 
 app.post("/withdrawFund", async (req, res) => {
   const wallet = req.body.wallet;
-  // const nScore = req.body.nebula;
-  // const dScore = req.body.dum;
-  // const sScore = req.body.konda;
-  // const aScore = req.body.ada;
-
   const nebula = req.body.nebula;
   const dum = req.body.dum;
   const konda = req.body.konda;
@@ -545,38 +460,6 @@ app.post("/withdrawFund", async (req, res) => {
         }, 10000);
       });
     }
-
-
-    // await mint();
-    // await sendAdaFromProject("addr_test1vzpwq95z3xyum8vqndgdd9mdnmafh3djcxnc6jemlgdmswcve6tkw", 1);
-    // const preResult = await withdrawFromProject(
-    //   wallet,
-    //   aScore,
-    //   nScore,
-    //   dScore,
-    //   sScore
-    // );
-
-    // if (preResult != undefined) {
-    //   database[index] = {
-    //     wallet: wallet,
-    //     nebula: database[index].nebula - parseFloat(nScore),
-    //     dum: database[index].dum - parseFloat(dScore),
-    //     konda: database[index].konda - parseFloat(sScore),
-    //     ada: database[index].ada - parseFloat(aScore),
-    //   };
-
-    //   const dataResult = {
-    //     db: database,
-    //     nebula: data.nebula,
-    //     dum: data.dum,
-    //     konda: data.konda,
-    //     ada: data.ada,
-    //   };
-    //   saveData(dataResult);
-    // }
-
-    // res.send(JSON.stringify(200));
   }
 });
 
