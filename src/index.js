@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import cron from "node-cron"
 
 import { Withdraw, checkTransaction, loadData, mint, saveData, withdrawFromProject, filterTransaction } from "./utils.js";
-import { init, addUser, loadUserData, updateUserData, savePendingData, getPendingData, updatePendingData,deletePendingData } from "./db.js";
+import { init, addUser, loadUserData, updateUserData, savePendingData, getPendingData, updatePendingData,deletePendingData, isUserExist } from "./db.js";
 import { config } from "./config.js";
 
 let probability = [Math.pow(0.34/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3) + Math.pow(0.0002/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3) + Math.pow(0.0002/9, 1/3) + Math.pow(0.0001/9, 1/3)];
@@ -42,96 +42,93 @@ cron.schedule("*/10 * * * * *", async function () {
     return [];
   });
   // console.log("txdata", transactions)
-  (transactions.forEach(async(transaction) => {
-    const hash = transaction.tx_hash.toString()
-    const pendingData = await getPendingData(hash)
-    // console.log("hash",hash, ":", pendingData)
-    if (pendingData && pendingData.action == "deposit" ) {
-      console.log("deposit", pendingData.action)
+  const processTransaction = async (transaction) => {
+    const hash = transaction.tx_hash.toString();
+    const pendingData = await getPendingData(hash);
+  
+    if (pendingData) {
+      if (pendingData.action === "deposit") {
+        const hashTable = pendingData.hash;
+        const hashData = await instance.get(`/txs/${hashTable}`);
+        if (hashData.valid_contract) {
+          const status = "confirmed";
+          const updatePending = await updatePendingData(hashTable, status);
+        }
+        if (pendingData.status === "confirmed") {
+          const data = await loadUserData(pendingData.from_address);
+          console.log("====pending Data===========",pendingData.ada_balance, data?.ada_balance)
 
-      const hashTable = pendingData.hash
-      // console.log( "hashs",  hashTable)
-      const hashData = await instance.get('/txs/' + hashTable).then(response => response.data).catch(error => {
-        console.log(error);
-        return [];
-      });
-      if (hashData.valid_contract == true) {
-        const status = "confirmed"
-        const updatePending = await updatePendingData(hashTable, status)
-      }
-      if (pendingData && pendingData.status == "confirmed") {
-        const data = await loadUserData(pendingData.from_address);
-        if (!data) {
-          const ada_deposited = parseFloat(pendingData.ada_balance) + 0
-          const dum_deposited = parseFloat(pendingData.dum_balance) + 0
-          const nebula_deposited = parseFloat(pendingData.nebula_balance) + 0
-          const konda_deposited = parseFloat(pendingData.konda_balance) + 0
-          console.log("DATA:  ", data);
-          const dataResult = {
-            nebula_balance: nebula_deposited,
-            dum_balance: dum_deposited,
-            konda_balance: konda_deposited,
-            ada_balance: ada_deposited,
-          };
-          const userData = await addUser(pendingData.from_address, ada_deposited, dum_deposited, nebula_deposited, konda_deposited)
-        } else {
-          const ada_deposited = parseFloat(pendingData.ada_balance) + parseFloat(data.ada_balance)
-          const dum_deposited = parseFloat(pendingData.dum_balance) + parseFloat(data.dum_balance)
-          const nebula_deposited = parseFloat(pendingData.nebula_balance) + parseFloat(data.nebula_balance)
-          const konda_deposited = parseFloat(pendingData.konda_balance) + parseFloat(data.konda_balance)
-          console.log("DATA:  ", data);
-          const dataResult = {
-            nebula_balance: nebula_deposited,
-            dum_balance: dum_deposited,
-            konda_balance: konda_deposited,
-            ada_balance: ada_deposited,
-          };
-          const deletePending = await deletePendingData(pendingData.hash)
-          if (data.address == pendingData.from_address) {
-            const updateData = await updateUserData(pendingData.from_address, dataResult)
+          const ada_deposited = parseFloat(pendingData.ada_balance) + parseFloat(data?.ada_balance || 0);
+          const dum_deposited = parseFloat(pendingData.dum_balance) + parseFloat(data?.dum_balance || 0);
+          const nebula_deposited = parseFloat(pendingData.nebula_balance) + parseFloat(data?.nebula_balance || 0);
+          const konda_deposited = parseFloat(pendingData.konda_balance) + parseFloat(data?.konda_balance || 0);
+          let userAdded = false;
+
+          console.log("====depositeData===========",ada_deposited, dum_deposited, nebula_deposited, konda_deposited)
+          const deletePending = await deletePendingData(pendingData.hash);
+
+          if (!data) {
+            const isUserAdded = await isUserExist(pendingData.from_address);
+            if (!isUserAdded) {
+              // add user and set flag to true
+              console.log("====updateUserData====!isUserAdded=======",ada_deposited, dum_deposited, nebula_deposited, konda_deposited)
+
+              const userData = await addUser(pendingData.from_address, ada_deposited, dum_deposited, nebula_deposited, konda_deposited);
+              userAdded = true;
+            } else {
+              userAdded = false;
+            }
           } else {
-            const userData = await addUser(pendingData.from_address, ada_balance, dum_balance, nebula_balance, konda_balance)
+            
+            const dataResult = {
+              nebula_balance: nebula_deposited,
+              dum_balance: dum_deposited,
+              konda_balance: konda_deposited,
+              ada_balance: ada_deposited,
+            };
+            console.log("====updateUserData======else====", dataResult)
+            const updateUser = await updateUserData(pendingData.from_address, dataResult);
+          }
+        }
+      }
+    
+      if (pendingData.action === "withdraw") {
+        const hashTable = pendingData.hash;
+        const hashData = await instance.get(`/txs/${hashTable}`);
+        if (hashData.valid_contract) {
+          const status = "confirmed";
+          const updatePending = await updatePendingData(hashTable, status);
+        }
+        if (pendingData.status === "confirmed") {
+          try {
+            const data = await loadUserData(pendingData.to_address);
+            const ada_withdraw = parseFloat(data.ada_balance) - parseFloat(pendingData.ada_balance);
+            const dum_withdraw = parseFloat(data.dum_balance) - parseFloat(pendingData.dum_balance);
+            const nebula_withdraw = parseFloat(data.nebula_balance) - parseFloat(pendingData.nebula_balance);
+            const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance);
+            const dataResult = {
+              nebula_balance: nebula_withdraw,
+              dum_balance: dum_withdraw,
+              konda_balance: konda_withdraw,
+              ada_balance: ada_withdraw,
+            };
+            const deletePending = await deletePendingData(pendingData.hash);
+            if (data.ada_balance < pendingData.ada_balance) {
+              console.log("ADA Amount Exceed");
+              res.send(JSON.stringify(-100));
+            } else {
+              console.log("Good", data.ada_balance > pendingData.ada_balance);
+              const updateData = await updateUserData(pendingData.to_address, dataResult);
+            }
+          } catch (error) {
+            console.log(error);
           }
         }
       }
     }
-    if (pendingData && pendingData.action == "withdraw") {
-      console.log("withdraw", pendingData.action)
-      const hashTable = pendingData.hash
-      console.log( "hashs",  hashTable)
-      const hashData = await instance.get('/txs/' + hashTable).then(response => response.data).catch(error => {
-        console.log(error);
-        return [];
-      });
-      if (hashData.valid_contract == true) {
-        const status = "confirmed"
-        const updatePending = await updatePendingData(hashTable, status)
-      }
-      if (pendingData && pendingData.status == "confirmed") {
-        const data = await loadUserData(pendingData.to_address);
-        console.log( "data", data)
-        const ada_withdraw = parseFloat(data.ada_balance) - parseFloat(pendingData.ada_balance)
-        const dum_withdraw = parseFloat(data.dum_balance) - parseFloat(pendingData.dum_balance)
-        const nebula_withdraw = parseFloat(data.nebula_balance) - parseFloat(pendingData.nebula_balance)
-        const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance)
-
-        const dataResult = {
-          nebula_balance: nebula_withdraw,
-          dum_balance: dum_withdraw,
-          konda_balance: konda_withdraw,
-          ada_balance: ada_withdraw,
-        };
-        const deletePending = await deletePendingData(pendingData.hash)
-        if (data.ada_balance < pendingData.ada_balance) {
-          console.log("ADA Amount Exceed");
-          res.send(JSON.stringify(-100));
-        } else {
-          console.log("Good", data.ada_balance > pendingData.ada_balance )
-          const updateData = await updateUserData(pendingData.to_address, dataResult)
-        }
-      }
-    }
-  }))
+  };
+  
+  Promise.all(transactions.map(processTransaction));
   
 
 })

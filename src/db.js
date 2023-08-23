@@ -27,7 +27,7 @@ export const init = () => {
 export const addUser = async (address, ada_balance, dum_balance, nebula_balance, konda_balance) => {
     try {
         let ts = new Date()
-        
+        console.log("==========start===========", ada_balance)
         const newUser = new usersModel({
             address: address,
             ada_balance: ada_balance,
@@ -38,7 +38,7 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
 
         newUser.save(function (err, book) {
             if (err) return console.error(err);
-            console.log(newUser, "Saved Successful")
+            console.log(newUser, "Saved new user Successful")
         })
     } catch (error) {
         console.log("error");
@@ -106,12 +106,18 @@ export const loadUserData = async (address) => {
     try {
        
         const res = await usersModel.findOne({ address })
-
+        console.log("load saved data", res)
         return res
     }catch (error) {
         console.log("error");
     }
 }
+
+export const isUserExist = async (address) => {
+    // replace this with your own database query
+    const user = await usersModel.findOne({ address });
+    return !!user; // return true if user exists, false otherwise
+  };
 
 export const loadPlayData = async (address) => {
     if(!address) return null
@@ -130,8 +136,9 @@ export const updateUserData = async (address, dataResult) => {
     if (!address) return null
     try {
         const filter = { address: address }
-        
-        const res = await usersModel.findOneAndUpdate(filter, dataResult,  { new: true })
+        console.log("==========Database===========", dataResult)
+        const res = await usersModel.findOneAndUpdate(filter, dataResult, { new: true })
+        console.log("=======stored Data===========", res)
     } catch (error) {
         console.log("update error");
     }
@@ -164,7 +171,7 @@ export const savePendingData = async (from_address, to_address, ada_balance, dum
         })
         newPendingData.save(function (err) {
             if (err) return console.log(err);
-            console.log(newPendingData, "Saved Successful")
+            console.log(newPendingData, "Saved pending data Successful")
         });
     } catch (err) {
         console.log("error");
