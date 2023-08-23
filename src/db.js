@@ -27,7 +27,6 @@ export const init = () => {
 export const addUser = async (address, ada_balance, dum_balance, nebula_balance, konda_balance) => {
     try {
         let ts = new Date()
-        console.log("==========start===========", ada_balance)
         const newUser = new usersModel({
             address: address,
             ada_balance: ada_balance,
@@ -103,10 +102,8 @@ export const addTransaction = async (address, hash, time, status) => {
 
 export const loadUserData = async (address) => {
     if(!address) return null
-    try {
-       
+    try {      
         const res = await usersModel.findOne({ address })
-        console.log("load saved data", res)
         return res
     }catch (error) {
         console.log("error");
@@ -136,9 +133,7 @@ export const updateUserData = async (address, dataResult) => {
     if (!address) return null
     try {
         const filter = { address: address }
-        console.log("==========Database===========", dataResult)
         const res = await usersModel.findOneAndUpdate(filter, dataResult, { new: true })
-        console.log("=======stored Data===========", res)
     } catch (error) {
         console.log("update error");
     }

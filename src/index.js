@@ -56,23 +56,18 @@ cron.schedule("*/10 * * * * *", async function () {
         }
         if (pendingData.status === "confirmed") {
           const data = await loadUserData(pendingData.from_address);
-          console.log("====pending Data===========",pendingData.ada_balance, data?.ada_balance)
-
           const ada_deposited = parseFloat(pendingData.ada_balance) + parseFloat(data?.ada_balance || 0);
           const dum_deposited = parseFloat(pendingData.dum_balance) + parseFloat(data?.dum_balance || 0);
           const nebula_deposited = parseFloat(pendingData.nebula_balance) + parseFloat(data?.nebula_balance || 0);
           const konda_deposited = parseFloat(pendingData.konda_balance) + parseFloat(data?.konda_balance || 0);
           let userAdded = false;
 
-          console.log("====depositeData===========",ada_deposited, dum_deposited, nebula_deposited, konda_deposited)
           const deletePending = await deletePendingData(pendingData.hash);
 
           if (!data) {
             const isUserAdded = await isUserExist(pendingData.from_address);
             if (!isUserAdded) {
               // add user and set flag to true
-              console.log("====updateUserData====!isUserAdded=======",ada_deposited, dum_deposited, nebula_deposited, konda_deposited)
-
               const userData = await addUser(pendingData.from_address, ada_deposited, dum_deposited, nebula_deposited, konda_deposited);
               userAdded = true;
             } else {
@@ -86,7 +81,6 @@ cron.schedule("*/10 * * * * *", async function () {
               konda_balance: konda_deposited,
               ada_balance: ada_deposited,
             };
-            console.log("====updateUserData======else====", dataResult)
             const updateUser = await updateUserData(pendingData.from_address, dataResult);
           }
         }
