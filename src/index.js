@@ -50,7 +50,7 @@ cron.schedule("*/10 * * * * *", async function () {
       if (pendingData.action === "deposit") {
         const hashTable = pendingData.hash;
         const hashData = await instance.get(`/txs/${hashTable}`);
-        if (hashData.valid_contract) {
+        if (hashData.data.valid_contract) {
           const status = "confirmed";
           const updatePending = await updatePendingData(hashTable, status);
         }
@@ -68,6 +68,7 @@ cron.schedule("*/10 * * * * *", async function () {
             const isUserAdded = await isUserExist(pendingData.from_address);
             if (!isUserAdded) {
               // add user and set flag to true
+
               const userData = await addUser(pendingData.from_address, ada_deposited, dum_deposited, nebula_deposited, konda_deposited);
               userAdded = true;
             } else {
@@ -89,7 +90,7 @@ cron.schedule("*/10 * * * * *", async function () {
       if (pendingData.action === "withdraw") {
         const hashTable = pendingData.hash;
         const hashData = await instance.get(`/txs/${hashTable}`);
-        if (hashData.valid_contract) {
+        if (hashData.data.valid_contract) {
           const status = "confirmed";
           const updatePending = await updatePendingData(hashTable, status);
         }
@@ -178,7 +179,7 @@ app.post("/play", async (req, res) => {
 
     const score = parseFloat(scores);
 
-    console.log("===============================api data", wallet, token, score)
+    console.log("===============================api data", token, score)
 
     const data = await loadUserData(wallet);
 
@@ -275,6 +276,7 @@ app.post("/play", async (req, res) => {
 
     // Reward Logic
     console.log("Get Amount:  ", getAmount);
+    console.log("multiplier:  ", multiplier);
 
     if (token === "nebula") {
       nebulaBase -= score;
