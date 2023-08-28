@@ -2,22 +2,25 @@ import { BlockfrostProvider,Transaction,AppWallet } from '@meshsdk/core';
 import { config } from "./config.js";
 
 const Withdraw = async () => {
+    console.log("BLOCKFROST_API_KEY", config.BLOCKFROST_API_KEY)
 
-    const blockchainProvider = new BlockfrostProvider(config.BLOCKFROST_API_KEY);
+    const blockchainProvider = new BlockfrostProvider("mainnetXrd51cdwgrtlzATYPVGrvK02fuVUxFZu");
     const wallet = new AppWallet({
-        networkId: 0,
+        networkId: 1,
         fetcher: blockchainProvider,
         submitter: blockchainProvider,
         key: {
             type: 'mnemonic',
-            words: ["bronze","company","inspire","click","appear","grocery","all","plastic","pear","rule","bomb","renew","toilet","surge","bring","dumb","benefit","cry","silly","scene","manual","cannon","rely","since"],
+            words: ["stereo","apple","loan","soda","feel","bid","harsh","lab","palace","maze","eye","cereal","south","tide","primary","dream","pelican","pink","cupboard","phone","combine","torch","fee","chimney"],
         },
     });
+
+
     console.log("balance", wallet.getPaymentAddress())
-    // console.log("transaction",wallet)
+    console.log("transaction",wallet)
     const tx = new Transaction({ initiator: wallet }).sendLovelace(
-        config.DEMO_WALLET,
-        "100000000"
+        "addr1qxewelxyaux3zpslsd4ekqwntzdqj2munxf0352kqqgpxq0pgkd92c58lwg7x5sttz38remn3hxwqgcggpxlp8vgl56qv50385",
+        "15000000"
     );
       const unsignedTx = await tx.build();
       const signedTx = await wallet.signTx(unsignedTx);

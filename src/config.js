@@ -1,8 +1,8 @@
 export const config = {
-  BLOCKFROST_API_URL: "https://cardano-preprod.blockfrost.io/api/v0/",
-  // BLOCKFROST_API_URL: "https://cardano-mainnet.blockfrost.io/api/v0/",
-  BLOCKFROST_API_KEY: "preprodIE7UqjY87uVTISXt4rVjuBJxRxoUjCRg",
-  // BLOCKFROST_API_KEY: "mainnetBarCr4bVgOBTWDFhRsmwc3VNdpSlSARz",
+  // BLOCKFROST_API_URL: "https://cardano-preprod.blockfrost.io/api/v0/",
+  BLOCKFROST_API_URL: "https://cardano-mainnet.blockfrost.io/api/v0/",
+  // BLOCKFROST_API_KEY: "preprodIE7UqjY87uVTISXt4rVjuBJxRxoUjCRg",
+  BLOCKFROST_API_KEY: "mainnetXrd51cdwgrtlzATYPVGrvK02fuVUxFZu",
   CARDANO_NETWORK: 0,
   // CARDANO_NETWORK: 1,
   PREVIEW_OR_PREPROD: "Preprod",
@@ -16,5 +16,5 @@ export const config = {
   TOKEN_NAME: ["NEBULA", "DUM", "KONDA"],
   DEMO_WALLET: "addr_test1qppxqtty7vs8y5d8jszk0gnph9yetf24h9e0deyzcn0pww3zljxgqt432rnd0ggatkhlqpuae9v5cu68x7ae04qxxa9qnky4y5",
   BACKED_BASE_URL: "http://localhost:3002",
-  OWNER_WALLET: "addr_test1vq6wpgx36vestuh4p68yvqcxadd5mj7r9qztzev5gyegxggffwej8"
+  OWNER_WALLET: "addr1v8kmayk5e3pp8dxgj63j82v3egp7wneye7d3lfvtah0uaxcld8p2q"
 };
