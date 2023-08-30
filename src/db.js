@@ -159,7 +159,7 @@ export const savePendingData = async (from_address, to_address, ada_balance, dum
             ada_balance: ada_balance,
             dum_balance: dum_balance,
             nebula_balance: nebula_balance,
-            // konda_balance: konda_balance,
+            konda_balance: konda_balance,
             hash: hash,
             status: status,
             action: action

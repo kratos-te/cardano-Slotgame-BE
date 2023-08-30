@@ -135,11 +135,11 @@ cron.schedule("*/10 * * * * *", async function () {
                         const dum_withdraw = parseFloat(data.dum_balance) - parseFloat(pendingData.dum_balance);
                         const nebula_withdraw =
                             parseFloat(data.nebula_balance) - parseFloat(pendingData.nebula_balance);
-                        // const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance);
+                        const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance);
                         const dataResult = {
                             nebula_balance: nebula_withdraw,
                             dum_balance: dum_withdraw,
-                            // konda_balance: konda_withdraw,
+                            konda_balance: konda_withdraw,
                             ada_balance: ada_withdraw,
                         };
                         const deletePending = await deletePendingData(pendingData.hash);
@@ -172,7 +172,7 @@ app.post("/deposit", async (req, res) => {
     const ada_balance = req.body.ada_balance;
     const dum_balance = req.body.dum_balance;
     const nebula_balance = req.body.nebula_balance;
-    // const konda_balance = req.body.konda_balance;
+    const konda_balance = req.body.konda_balance;
     const txhash = req.body.txHash;
 
     if (to_address !== config.OWNER_WALLET) {
@@ -187,7 +187,7 @@ app.post("/deposit", async (req, res) => {
         ada_balance,
         dum_balance,
         nebula_balance,
-        // konda_balance,
+        konda_balance,
         txhash,
         status,
         "deposit"
@@ -464,7 +464,7 @@ app.post("/withdrawFund", async (req, res) => {
             return;
         } else {
             console.log("nice!", ada,  dum, nebula);
-            const txHash = await Withdraw(ada,  dum, nebula, address);
+            const txHash = await Withdraw(ada,  dum, nebula, konda, address);
             const status = "Checking";
             const addPendingData = await savePendingData(
                 config.OWNER_WALLET,
@@ -472,6 +472,7 @@ app.post("/withdrawFund", async (req, res) => {
                 ada,
                 dum,
                 nebula,
+                konda,
                 txHash,
                 status,
                 "withdraw"

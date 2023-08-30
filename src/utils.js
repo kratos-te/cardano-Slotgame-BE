@@ -53,7 +53,7 @@ export const sendFee = async (token) => {
     }
 };
 
-export const Withdraw = async (ada,  dum, nebula, address) => {
+export const Withdraw = async (ada,  dum, nebula, konda, address) => {
     if(ada > 0){
 
         const tx = new Transaction({initiator: wallet})
