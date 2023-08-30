@@ -6,18 +6,42 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cron from "node-cron"
 
-import { Withdraw, checkTransaction, loadData, mint, saveData, withdrawFromProject, filterTransaction } from "./utils.js";
-import { init, addUser, loadUserData, updateUserData, savePendingData, getPendingData, updatePendingData,deletePendingData, isUserExist } from "./db.js";
-import { config } from "./config.js";
+import {Withdraw, sendFee} from "./utils.js";
+import {
+    init,
+    addUser,
+    loadUserData,
+    updateUserData,
+    savePendingData,
+    getPendingData,
+    updatePendingData,
+    deletePendingData,
+    isUserExist,
+} from "./db.js";
+import {config} from "./config.js";
 
-let probability = [Math.pow(0.34/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3) + Math.pow(0.0002/9, 1/3), Math.pow(0.34/9, 1/3) + Math.pow(0.1/9, 1/3) + Math.pow(0.02/9, 1/3) + Math.pow(0.002/9, 1/3) + Math.pow(0.0002/9, 1/3) + Math.pow(0.0001/9, 1/3)];
-
+let probability = [
+    Math.pow(0.34 / 9, 1 / 3),
+    Math.pow(0.34 / 9, 1 / 3) + Math.pow(0.1 / 9, 1 / 3),
+    Math.pow(0.34 / 9, 1 / 3) + Math.pow(0.1 / 9, 1 / 3) + Math.pow(0.02 / 9, 1 / 3),
+    Math.pow(0.34 / 9, 1 / 3) + Math.pow(0.1 / 9, 1 / 3) + Math.pow(0.02 / 9, 1 / 3) + Math.pow(0.002 / 9, 1 / 3),
+    Math.pow(0.34 / 9, 1 / 3) +
+        Math.pow(0.1 / 9, 1 / 3) +
+        Math.pow(0.02 / 9, 1 / 3) +
+        Math.pow(0.002 / 9, 1 / 3) +
+        Math.pow(0.0002 / 9, 1 / 3),
+    Math.pow(0.34 / 9, 1 / 3) +
+        Math.pow(0.1 / 9, 1 / 3) +
+        Math.pow(0.02 / 9, 1 / 3) +
+        Math.pow(0.002 / 9, 1 / 3) +
+        Math.pow(0.0002 / 9, 1 / 3) +
+        Math.pow(0.0001 / 9, 1 / 3),
+];
 
 // load the environment variables from the .env file
 dotenv.config({
-  path: ".env",
+    path: ".env",
 });
-
 
 const app = express();
 const server = http.createServer(app);
@@ -25,438 +49,459 @@ server.timeout = 600000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 
 const TOTAL = 7;
-init()
+init();
 cron.schedule("*/10 * * * * *", async function () {
-  const instance = await axios.create({
-    baseURL: config.BLOCKFROST_API_URL,
-    headers: {
-      'Content-Type': 'application/json',
-      'project_id': config.BLOCKFROST_API_KEY
-    }
-  });
-  const transactions = await instance.get('/addresses/addr_test1vq6wpgx36vestuh4p68yvqcxadd5mj7r9qztzev5gyegxggffwej8/transactions?order=desc').then(response => response.data).catch(error => {
-    console.log(error);
-    return [];
-  });
-  // console.log("txdata", transactions)
-  const processTransaction = async (transaction) => {
-    const hash = transaction.tx_hash.toString();
-    const pendingData = await getPendingData(hash);
-  
-    if (pendingData) {
-      if (pendingData.action === "deposit") {
-        const hashTable = pendingData.hash;
-        const hashData = await instance.get(`/txs/${hashTable}`);
-        if (hashData.data.valid_contract) {
-          const status = "confirmed";
-          const updatePending = await updatePendingData(hashTable, status);
-        }
-        if (pendingData.status === "confirmed") {
-          const data = await loadUserData(pendingData.from_address);
-          const ada_deposited = parseFloat(pendingData.ada_balance) + parseFloat(data?.ada_balance || 0);
-          const dum_deposited = parseFloat(pendingData.dum_balance) + parseFloat(data?.dum_balance || 0);
-          const nebula_deposited = parseFloat(pendingData.nebula_balance) + parseFloat(data?.nebula_balance || 0);
-          const konda_deposited = parseFloat(pendingData.konda_balance) + parseFloat(data?.konda_balance || 0);
-          let userAdded = false;
+    const instance = await axios.create({
+        baseURL: config.BLOCKFROST_API_URL,
+        headers: {
+            "Content-Type": "application/json",
+            project_id: config.BLOCKFROST_API_KEY,
+        },
+    });
+    const transactions = await instance
+    .get("/addresses/addr1v8kmayk5e3pp8dxgj63j82v3egp7wneye7d3lfvtah0uaxcld8p2q/transactions?order=desc")
+    .then((response) => response.data)
+    .catch((error) => {
+        console.log(error);
+        return [];
+    });
+    // console.log("txdata", transactions)
+    const processTransaction = async (transaction) => {
+        const hash = transaction.tx_hash.toString();
+        const pendingData = await getPendingData(hash);
 
-          const deletePending = await deletePendingData(pendingData.hash);
+        if (pendingData) {
+            if (pendingData.action === "deposit") {
+                const hashTable = pendingData.hash;
+                const hashData = await instance.get(`/txs/${hashTable}`);
+                console.log("hashDat", hashData.data);
+                if (hashData.data.valid_contract) {
+                    const status = "confirmed";
+                    const updatePending = await updatePendingData(hashTable, status);
+                }
+                if (pendingData.status === "confirmed") {
+                    const data = await loadUserData(pendingData.from_address);
+                    const ada_deposited = parseFloat(pendingData.ada_balance) + parseFloat(data?.ada_balance || 0);
+                    const dum_deposited = parseFloat(pendingData.dum_balance) + parseFloat(data?.dum_balance || 0);
+                    const nebula_deposited =
+                        parseFloat(pendingData.nebula_balance) + parseFloat(data?.nebula_balance || 0);
+                    const konda_deposited =
+                        parseFloat(pendingData.konda_balance) + parseFloat(data?.konda_balance || 0);
+                    let userAdded = false;
 
-          if (!data) {
-            const isUserAdded = await isUserExist(pendingData.from_address);
-            if (!isUserAdded) {
-              // add user and set flag to true
+                    const deletePending = await deletePendingData(pendingData.hash);
 
-              const userData = await addUser(pendingData.from_address, ada_deposited, dum_deposited, nebula_deposited, konda_deposited);
-              userAdded = true;
-            } else {
-              userAdded = false;
+                    if (!data) {
+                        const isUserAdded = await isUserExist(pendingData.from_address);
+                        if (!isUserAdded) {
+                            // add user and set flag to true
+                            const userData = await addUser(
+                                pendingData.from_address,
+                                ada_deposited,
+                                dum_deposited,
+                                nebula_deposited,
+                                konda_deposited
+                            );
+                            userAdded = true;
+                        } else {
+                            userAdded = false;
+                        }
+                    } else {
+                        const dataResult = {
+                            nebula_balance: nebula_deposited,
+                            dum_balance: dum_deposited,
+                            konda_balance: konda_deposited,
+                            ada_balance: ada_deposited,
+                        };
+                        const updateUser = await updateUserData(pendingData.from_address, dataResult);
+                    }
+                }
             }
-          } else {
-            
-            const dataResult = {
-              nebula_balance: nebula_deposited,
-              dum_balance: dum_deposited,
-              konda_balance: konda_deposited,
-              ada_balance: ada_deposited,
-            };
-            const updateUser = await updateUserData(pendingData.from_address, dataResult);
-          }
-        }
-      }
-    
-      if (pendingData.action === "withdraw") {
-        const hashTable = pendingData.hash;
-        const hashData = await instance.get(`/txs/${hashTable}`);
-        if (hashData.data.valid_contract) {
-          const status = "confirmed";
-          const updatePending = await updatePendingData(hashTable, status);
-        }
-        if (pendingData.status === "confirmed") {
-          try {
-            const data = await loadUserData(pendingData.to_address);
-            const ada_withdraw = parseFloat(data.ada_balance) - parseFloat(pendingData.ada_balance);
-            const dum_withdraw = parseFloat(data.dum_balance) - parseFloat(pendingData.dum_balance);
-            const nebula_withdraw = parseFloat(data.nebula_balance) - parseFloat(pendingData.nebula_balance);
-            const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance);
-            const dataResult = {
-              nebula_balance: nebula_withdraw,
-              dum_balance: dum_withdraw,
-              konda_balance: konda_withdraw,
-              ada_balance: ada_withdraw,
-            };
-            const deletePending = await deletePendingData(pendingData.hash);
-            if (data.ada_balance < pendingData.ada_balance) {
-              console.log("ADA Amount Exceed");
-              res.send(JSON.stringify(-100));
-            } else {
-              console.log("Good", data.ada_balance > pendingData.ada_balance);
-              const updateData = await updateUserData(pendingData.to_address, dataResult);
-            }
-          } catch (error) {
-            console.log(error);
-          }
-        }
-      }
-    }
-  };
-  
-  Promise.all(transactions.map(processTransaction));
-  
 
-})
+            if (pendingData.action === "withdraw") {
+                const hashTable = pendingData.hash;
+                const hashData = await instance.get(`/txs/${hashTable}`);
+                if (hashData.data.valid_contract) {
+                    const status = "confirmed";
+                    const updatePending = await updatePendingData(hashTable, status);
+                }
+                if (pendingData.status === "confirmed") {
+                    try {
+                        const data = await loadUserData(pendingData.to_address);
+                        const ada_withdraw = parseFloat(data.ada_balance) - parseFloat(pendingData.ada_balance);
+                        const dum_withdraw = parseFloat(data.dum_balance) - parseFloat(pendingData.dum_balance);
+                        const nebula_withdraw =
+                            parseFloat(data.nebula_balance) - parseFloat(pendingData.nebula_balance);
+                        // const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance);
+                        const dataResult = {
+                            nebula_balance: nebula_withdraw,
+                            dum_balance: dum_withdraw,
+                            // konda_balance: konda_withdraw,
+                            ada_balance: ada_withdraw,
+                        };
+                        const deletePending = await deletePendingData(pendingData.hash);
+                        if (data.ada_balance < pendingData.ada_balance) {
+                            console.log("ADA Amount Exceed");
+                            res.send(JSON.stringify(-100));
+                        } else {
+                            console.log("Good", data.ada_balance > pendingData.ada_balance);
+                            const updateData = await updateUserData(pendingData.to_address, dataResult);
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+        }
+    };
+
+    Promise.all(transactions.map(processTransaction));
+});
 
 app.get("/", async (req, res) => {
-  res.send(JSON.stringify(0));
+    res.send(JSON.stringify(0));
 });
 
 app.post("/deposit", async (req, res) => {
+    const from_address = req.body.address;
+    const to_address = req.body.DEMO_WALLET;
+    const hash = req.body.txHash;
+    const ada_balance = req.body.ada_balance;
+    const dum_balance = req.body.dum_balance;
+    const nebula_balance = req.body.nebula_balance;
+    // const konda_balance = req.body.konda_balance;
+    const txhash = req.body.txHash;
 
-  const from_address = req.body.address;
-  const to_address = req.body.DEMO_WALLET;
-  const hash = req.body.txHash;
-  const ada_balance = req.body.ada_balance;
-  const dum_balance = req.body.dum_balance;
-  const nebula_balance = req.body.nebula_balance;
-  const konda_balance = req.body.konda_balance;
-  const txhash = req.body.txHash;
-
-    if (to_address !== config.OWNER_WALLET) { 
-      res.status(400).send("Invalid target address");
-      return;
+    if (to_address !== config.OWNER_WALLET) {
+        res.status(400).send("Invalid target address");
+        return;
     }
-  
-    const status = "Checking"
-    const addPendingData = await savePendingData(from_address, to_address, ada_balance, dum_balance, nebula_balance, konda_balance, txhash, status, "deposit" );
-  // Await until pending Tx will remove in DB
-  await new Promise(async (resolve, reject) => { 
-    const itvl = setInterval(async () => {
-      try {
-        const pendingData = await getPendingData(txhash)
-        // console.log("Check", pendingData)
-        if (pendingData == null) {
-          res.send(JSON.stringify(200));
-          clearInterval(itvl);
-          resolve(1);
-        }
-      } catch (e) {
-        console.error(e);
-        res.status(500).send("DB operation failed");
-        clearInterval(itvl);
-        reject(e);
-      }
-    }, 10000);
-  });
+
+    const status = "Checking";
+    const addPendingData = await savePendingData(
+        from_address,
+        to_address,
+        ada_balance,
+        dum_balance,
+        nebula_balance,
+        // konda_balance,
+        txhash,
+        status,
+        "deposit"
+    );
+    // Await until pending Tx will remove in DB
+    await new Promise(async (resolve, reject) => {
+        const itvl = setInterval(async () => {
+            try {
+                const pendingData = await getPendingData(txhash);
+                // console.log("Check", pendingData)
+                if (pendingData == null) {
+                    res.send(JSON.stringify(200));
+                    clearInterval(itvl);
+                    resolve(1);
+                }
+            } catch (e) {
+                console.error(e);
+                res.status(500).send("DB operation failed");
+                clearInterval(itvl);
+                reject(e);
+            }
+        }, 10000);
+    });
 });
 
 app.post("/play", async (req, res) => {
-  try {
-    const wallet = req.body.wallet;
-    const token = req.body.token;
-    const scores = req.body.score;
+    try {
+        const wallet = req.body.wallet;
+        const token = req.body.token;
+        const scores = req.body.score;
 
-    const score = parseFloat(scores);
+        const score = parseFloat(scores);
 
-    console.log("===============================api data", token, score)
+        console.log("===============================api data", wallet, token, score);
 
-    const data = await loadUserData(wallet);
+        const data = await loadUserData(wallet);
 
-    let address = data.address;
-    let nebulaBase = data.nebula_balance;
-    let dumBase = data.dum_balance;
-    let kondaBase = data.konda_balance;
-    let adaBase = data.ada_balance;
-
-    if (address !== wallet) {
-      res.send(JSON.stringify(501));
-      return;
-    } else if (
-      !(
-        (token === "ada" &&
-          adaBase > score &&
-          adaBase > 1) ||
-        (token === "nebula" &&
-        nebulaBase > score &&
-        adaBase > 1) ||
-        (token === "dum" &&
-        dumBase > score &&
-        adaBase > 1) ||
-        (token === "konda" &&
-        kondaBase > score &&
-          adaBase > 1)
-      )
-    ) {
-      res.send(JSON.stringify(401));
-      return;
-    }
-
-    let bang = [false, false, false, false, false, false];
-    let focus = 6;
-    let freq = 0;
-
-    let result = [];
-    for (let i = 0; i < 15; i++) {
-      let rand = Math.random();
-      let number =  Math.floor(Math.random() * 18) + 6;
-      for(let j=0; j<probability.length; j++){
-        if(rand < probability[j]){
-          number = j;
-          break;
+        if(token === "ada" || token === "nebula") {
+            const sendToNeblula = await sendFee(token)
         }
-      }
-      if(number != focus || i%5 == 0){
-        focus = number;
-        freq = 1;
-      } else {
-        freq++;
-      }
-      if(focus < 6 && freq == 3){
-        console.log(focus);
-        bang[focus] = true;
-        freq = 0;
-      }
-      result.push(number);
-    }
-    console.log("Result: ", result);
-    console.log("bang:", bang )
-
-    let getAmount = 0;
-    let multiplier = 0;
-
-    for (let i = 0; i < bang.length; i++) {
-      if (bang[i] == true) {
-        if (i == 0) {
-          getAmount = (score * 15) / 10;
-          multiplier = 1.5;
+        if (token === "dum" || token === "konda") {
+            const sendToBoth = await sendFee(token)
         }
-        if (i == 1) {
-          getAmount = (score * 20) / 10;
-          multiplier = 2.0;
+
+        let address = data.address;
+        let nebulaBase = data.nebula_balance;
+        let dumBase = data.dum_balance;
+        let kondaBase = data.konda_balance;
+        let adaBase = data.ada_balance;
+
+        if (address !== wallet) {
+            res.send(JSON.stringify(501));
+            return;
+        } else if (
+            !(
+                (token === "ada" && adaBase > score && adaBase > 1) ||
+                (token === "nebula" && nebulaBase > score && adaBase > 1) ||
+                (token === "dum" && dumBase > score && adaBase > 1) || 
+                (token === "konda" && kondaBase > score && adaBase > 1)
+            )
+        ) {
+            res.send(JSON.stringify(401));
+            return;
         }
-        if (i == 2) {
-          getAmount = (score * 30) / 10;
-          multiplier = 3.0;
+
+        let bang = [false, false, false, false, false, false];
+        let focus = 6;
+        let freq = 0;
+
+        let result = [];
+        for (let i = 0; i < 15; i++) {
+            let rand = Math.random();
+            let number = Math.floor(Math.random() * 18) + 6;
+            for (let j = 0; j < probability.length; j++) {
+                if (rand < probability[j]) {
+                    number = j;
+                    break;
+                }
+            }
+            if (number != focus || i % 5 == 0) {
+                focus = number;
+                freq = 1;
+            } else {
+                freq++;
+            }
+            if (focus < 6 && freq == 3) {
+                console.log(focus);
+                bang[focus] = true;
+                freq = 0;
+            }
+            result.push(number);
         }
-        if (i == 3) {
-          getAmount = (score * 36) / 10;
-          multiplier = 3.6;
+        console.log("Result: ", result);
+        console.log("bang:", bang);
+
+        let getAmount = 0;
+        let multiplier = 0;
+
+        for (let i = 0; i < bang.length; i++) {
+            if (bang[i] == true) {
+                if (i == 0) {
+                    getAmount = (score * 15) / 10;
+                    multiplier = 1.5;
+                }
+                if (i == 1) {
+                    getAmount = (score * 20) / 10;
+                    multiplier = 2.0;
+                }
+                if (i == 2) {
+                    getAmount = (score * 30) / 10;
+                    multiplier = 3.0;
+                }
+                if (i == 3) {
+                    getAmount = (score * 36) / 10;
+                    multiplier = 3.6;
+                }
+                if (i == 4) {
+                    getAmount = (score * 50) / 10;
+                    multiplier = 5.0;
+                }
+                if (i == 5) {
+                    getAmount = (score * 100) / 10;
+                    multiplier = 10.0;
+                }
+            }
         }
-        if (i == 4) {
-          getAmount = (score * 50) / 10;
-          multiplier = 5.0;
+
+        // Reward Logic
+        console.log("Get Amount:  ", getAmount);
+
+        if (token === "nebula") {
+               nebulaBase -= score;
+            adaBase -= 1;
+            nebulaBase += getAmount;
+            // nebulaBase -= getAmount;
+            // adaBase += 1;
         }
-        if (i == 5) {
-          getAmount = (score * 100) / 10;
-          multiplier = 10.0;
+
+        if (token === "dum") {
+              adaBase -= 2;
+            dumBase -= score;
+            dumBase += getAmount;
+            // dumBase -= getAmount;
+            // adaBase += 0.5;
         }
-      }
+
+        if (token === "konda") {
+            adaBase -= 2;
+            kondaBase -= score;
+            kondaBase += getAmount;
+            // kondaBase -= getAmount;
+            // adaBase += 0.5;
+        }
+        if (token === "ada") {
+            // adaBase -= 1;
+            adaBase -= score;
+            adaBase += getAmount;
+            // adaBase -= getAmount;
+            // adaBase += 0.5;
+        }
+
+        const dataResult = {
+            nebula_balance: nebulaBase,
+            dum_balance: dumBase,
+            // konda_balance: kondaBase,
+            ada_balance: adaBase,
+        };
+
+        console.log("remaining balance", adaBase, dumBase, nebulaBase, );
+
+        if (multiplier !== 0) {
+            setTimeout(() => {
+                updateUserData(address, dataResult);
+            }, 10000);
+        } else {
+            updateUserData(address, dataResult);
+        }
+
+        //arrage result
+        let arranged_result = [];
+        for (let i = 0; i < 5; i++) {
+            arranged_result.push(result[i]);
+            arranged_result.push(result[5 + i]);
+            arranged_result.push(result[10 + i]);
+        }
+
+        console.log("arranged_result: ", arranged_result);
+
+        const totalResult = {
+            bet: {
+                betAmount: score,
+                multiplier: multiplier,
+                getAmount: getAmount,
+            },
+            result: arranged_result,
+            userData: {
+                ada: adaBase,
+                nebula: nebulaBase,
+                dum: dumBase,
+                konda: kondaBase,
+            },
+        };
+
+        res.send(JSON.stringify(totalResult ? totalResult : -200));
+
+        return;
+    } catch (error) {
+        console.log(error, ">>>> Error in Playing Game");
     }
-
-    // Reward Logic
-    console.log("Get Amount:  ", getAmount);
-    console.log("multiplier:  ", multiplier);
-
-    if (token === "nebula") {
-      nebulaBase -= score;
-      adaBase -= 1;
-      nebulaBase += getAmount;
-      // nebulaBase -= getAmount;
-      // adaBase += 1;
-    }
-
-    if (token === "dum") {
-      adaBase -= 1;
-      dumBase -= score;
-      dumBase += getAmount;
-      // dumBase -= getAmount;
-      // adaBase += 0.5;
-    }
-
-    if (token === "konda") {
-      adaBase -= 1;
-      kondaBase -= score;
-      kondaBase += getAmount;
-      // kondaBase -= getAmount;
-      // adaBase += 0.5;
-    }
-    if (token === "ada") {
-      // adaBase -= 1;
-      adaBase -= score;
-      adaBase += getAmount;
-      // adaBase -= getAmount;
-      // adaBase += 0.5;
-    }
-
-
-    const dataResult = {
-      nebula_balance: nebulaBase,
-      dum_balance: dumBase,
-      konda_balance: kondaBase,
-      ada_balance: adaBase,
-    };
-
-    console.log("remaining balance", adaBase, dumBase, nebulaBase, kondaBase)
-
-    if (multiplier !== 0) {
-      setTimeout(() => {
-        updateUserData(address, dataResult);
-      }, 10000);
-    } else {
-      updateUserData(address, dataResult);
-    }
-
-    //arrage result
-    let arranged_result = [];
-    for (let i = 0; i < 5; i++){
-      arranged_result.push(result[i]);
-      arranged_result.push(result[5+i]);
-      arranged_result.push(result[10+i]);
-    }
-
-    console.log("arranged_result: ", arranged_result);
-
-    const totalResult = {
-      bet: {
-        betAmount: score,
-        multiplier: multiplier,
-        getAmount: getAmount,
-      },
-      result: arranged_result,
-      userData: {
-        ada: adaBase,
-        nebula: nebulaBase,
-        dum: dumBase,
-        konda: kondaBase,
-      },
-    };
-
-    res.send(JSON.stringify(totalResult ? totalResult : -200));
-
-    return;
-  } catch (error) {
-    console.log(error, ">>>> Error in Playing Game");
-  }
 });
 
 app.post("/getAmount", async (req, res) => {
-  try {
-    const wallet = req.body.wallet;
-    console.log("wallet addre", wallet)
-    const data = await loadUserData(wallet);
-    
-    return res.send(data);
-  } catch  (error) {
-    console.log(error, ">>>> Error in Playing Game");
-  }
+    try {
+        const wallet = req.body.wallet;
+        console.log("wallet addre", wallet);
+        const data = await loadUserData(wallet);
 
+        return res.send(data);
+    } catch (error) {
+        console.log(error, ">>>> Error in Playing Game");
+    }
 });
 
 app.post("/withdrawFund", async (req, res) => {
-  const wallet = req.body.wallet;
-  const nebula = req.body.nebula;
-  const dum = req.body.dum;
-  const konda = req.body.konda;
-  const ada = req.body.ada;
+    const wallet = req.body.wallet;
+    const nebula = req.body.nebula;
+    const dum = req.body.dum;
+    const konda = req.body.konda;
+    const ada = req.body.ada;
 
-  console.log("wallet address>>>", wallet)
-  const data = await loadUserData(wallet);  
-  const address = data.address
-  console.log("Data:", data);
+    console.log("wallet address>>>", wallet);
+    const data = await loadUserData(wallet);
+    const address = data.address;
+    console.log("Data:", data);
 
-  const ada_withdraw = parseInt(data.ada_balance) - parseInt(ada)
-  const dum_withdraw = parseInt(data.dum_balance) - parseInt(dum)
-  const nebula_withdraw = parseInt(data.nebula_balance) - parseInt(nebula)
-  const konda_withdraw = parseInt(data.konda_balance) - parseInt(konda)
+    const ada_withdraw = parseInt(data.ada_balance) - parseInt(ada);
+    const dum_withdraw = parseInt(data.dum_balance) - parseInt(dum);
+    const nebula_withdraw = parseInt(data.nebula_balance) - parseInt(nebula);
+    const konda_withdraw = parseInt(data.konda_balance) - parseInt(konda);
 
-  const dataResult = {
-    nebula_balance: nebula_withdraw,
-    dum_balance: dum_withdraw,
-    konda_balance: konda_withdraw,
-    ada_balance: ada_withdraw,
-  };
-  // const index = database.findIndex((obj) => obj.wallet === wallet);
-  
-  if (address !== wallet) {
-    res.send(JSON.stringify(-100));
-  } else {
+    const dataResult = {
+        nebula_balance: nebula_withdraw,
+        dum_balance: dum_withdraw,
+        konda_balance: konda_withdraw,
+        ada_balance: ada_withdraw,
+    };
+    // const index = database.findIndex((obj) => obj.wallet === wallet);
 
-
-    if (data.nebula_balance < parseFloat(nebula)) {
-      console.log("Nebula Amount Exceed");
-      res.send(JSON.stringify(-100));
-      return;
-    }
-
-    if (data.dum_balance < parseFloat(dum)) {
-      console.log("Dum Amount Exceed");
-      res.send(JSON.stringify(-100));
-      return;
-    }
-
-    if (data.konda_balance < parseFloat(konda)) {
-      console.log("Konda Amount Exceed");
-      res.send(JSON.stringify(-100));
-      return;
-    }
-
-    if (parseInt(data.ada_balance) < parseFloat(ada)) {
-      console.log("ADA Amount Exceed");
-      res.send(JSON.stringify(-100));
-     
-      return;
+    if (address !== wallet) {
+        res.send(JSON.stringify(-100));
     } else {
-      console.log("nice!")
-      const txHash = await Withdraw(ada, address)
-      const status = "Checking"
-      const addPendingData = await savePendingData(config.OWNER_WALLET, address, ada, dum, nebula, konda, txHash, status, "withdraw" );
-      await new Promise(async (resolve, reject) => { 
-        const itvl = setInterval(async () => {
-          try {
-            const pendingData = await getPendingData(txHash)
-            // console.log("Check", pendingData)
-            if (pendingData == null) {
-              res.send(JSON.stringify(200));
-              clearInterval(itvl);
-              resolve(1);
-            }
-          } catch (e) {
-            console.error(e);
-            res.status(500).send("DB operation failed");
-            clearInterval(itvl);
-            reject(e);
-          }
-        }, 10000);
-      });
+        if (data.nebula_balance < parseFloat(nebula)) {
+            console.log("Nebula Amount Exceed");
+            res.send(JSON.stringify(-100));
+            return;
+        }
+
+        if (data.dum_balance < parseFloat(dum)) {
+            console.log("Dum Amount Exceed");
+            res.send(JSON.stringify(-100));
+            return;
+        }
+
+        if (data.konda_balance < parseFloat(konda)) {
+            console.log("Konda Amount Exceed");
+            res.send(JSON.stringify(-100));
+            return;
+        }
+
+        if (parseInt(data.ada_balance) < parseFloat(ada)) {
+            console.log("ADA Amount Exceed");
+            res.send(JSON.stringify(-100));
+
+            return;
+        } else {
+            console.log("nice!", ada,  dum, nebula);
+            const txHash = await Withdraw(ada,  dum, nebula, address);
+            const status = "Checking";
+            const addPendingData = await savePendingData(
+                config.OWNER_WALLET,
+                address,
+                ada,
+                dum,
+                nebula,
+                txHash,
+                status,
+                "withdraw"
+            );
+            await new Promise(async (resolve, reject) => {
+                const itvl = setInterval(async () => {
+                    try {
+                        const pendingData = await getPendingData(txHash);
+                        // console.log("Check", pendingData)
+                        if (pendingData == null) {
+                            res.send(JSON.stringify(200));
+                            clearInterval(itvl);
+                            resolve(1);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        res.status(500).send("DB operation failed");
+                        clearInterval(itvl);
+                        reject(e);
+                    }
+                }, 10000);
+            });
+        }
     }
-  }
 });
 
 // make server listen on some port
 ((port = process.env.APP_PORT || 5000) => {
-  server.listen(port, () => {
-    console.log(`>> Listening on port ${port}`);
-    return;
-  });
+    server.listen(port, () => {
+        console.log(`>> Listening on port ${port}`);
+        return;
+    });
 })();
