@@ -16,7 +16,7 @@ dotenv.config({
 
 const MNEMONIC_STR = process.env.MNEMONIC;
 const MNEMONIC = MNEMONIC_STR.split(",")
-console.log("word>>>>", MNEMONIC)
+
 
 const blockchainProvider = new BlockfrostProvider(config.BLOCKFROST_API_KEY);
 const wallet = new AppWallet({
