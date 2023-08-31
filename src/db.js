@@ -24,7 +24,7 @@ export const init = () => {
         });
 };
 
-export const addUser = async (address, ada_balance, dum_balance, nebula_balance, ) => {
+export const addUser = async (address, ada_balance, dum_balance, nebula_balance, konda_balance ) => {
     try {
         let ts = new Date()
         const newUser = new usersModel({
@@ -32,7 +32,7 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
             ada_balance: ada_balance,
             dum_balance: dum_balance,
             nebula_balance: nebula_balance,
-            // konda_balance: konda_balance,
+            konda_balance: konda_balance,
         })
 
         newUser.save(function (err, book) {
@@ -44,7 +44,7 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
     }
 };
 
-export const addGamePlay = async (address, ada_balance, dum_balance, nebula_balance, ) => {
+export const addGamePlay = async (address, ada_balance, dum_balance, nebula_balance, konda_balance) => {
     try {
         let ts = new Date()
 
@@ -53,7 +53,7 @@ export const addGamePlay = async (address, ada_balance, dum_balance, nebula_bala
             ada_balance: ada_balance,
             dum_balance: dum_balance,
             nebula_balance: nebula_balance,
-            // konda_balance: konda_balance,
+            konda_balance: konda_balance,
 
         })
 
@@ -150,7 +150,7 @@ export const updatePlayData = async (address, dataResult) => {
     }
 }
 
-export const savePendingData = async (from_address, to_address, ada_balance, dum_balance, nebula_balance, hash, status, action) => {
+export const savePendingData = async (from_address, to_address, ada_balance, dum_balance, nebula_balance,konda_balance, hash, status, action) => {
     if (!from_address && !to_address) return null
     try {
         const newPendingData = new pendingModel({
