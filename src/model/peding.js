@@ -8,6 +8,7 @@ const pendingSchema = new mongoose.Schema(
         dum_balance: Number,
         nebula_balance: Number,
         konda_balance: Number,
+        snek_balance: Number,
         hash: String,
         status: String,
         action: String,

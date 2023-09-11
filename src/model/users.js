@@ -6,7 +6,8 @@ const usersSchema = new mongoose.Schema(
         ada_balance: Number,
         dum_balance: Number,
         nebula_balance: Number,
-        konda_balance: Number,                    
+        konda_balance: Number,  
+        snek_balance: Number,                  
     },
     {
         timestamps: {

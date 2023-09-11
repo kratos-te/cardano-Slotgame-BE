@@ -24,7 +24,7 @@ export const init = () => {
         });
 };
 
-export const addUser = async (address, ada_balance, dum_balance, nebula_balance, konda_balance ) => {
+export const addUser = async (address, ada_balance, dum_balance, nebula_balance, konda_balance, snek_balance ) => {
     try {
         let ts = new Date()
         const newUser = new usersModel({
@@ -33,6 +33,7 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
             dum_balance: dum_balance,
             nebula_balance: nebula_balance,
             konda_balance: konda_balance,
+            snek_balance: snek_balance,
         })
 
         newUser.save(function (err, book) {
@@ -44,7 +45,7 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
     }
 };
 
-export const addGamePlay = async (address, ada_balance, dum_balance, nebula_balance, konda_balance) => {
+export const addGamePlay = async (address, ada_balance, dum_balance, nebula_balance, konda_balance, snek_balance) => {
     try {
         let ts = new Date()
 
@@ -54,7 +55,7 @@ export const addGamePlay = async (address, ada_balance, dum_balance, nebula_bala
             dum_balance: dum_balance,
             nebula_balance: nebula_balance,
             konda_balance: konda_balance,
-
+            snek_balance: snek_balance,
         })
 
         newGamePlay.save(function (err, book) {
@@ -82,23 +83,60 @@ export const addGame = async (address, token, amount) => {
     }
 };
 
-export const addTransaction = async (address, hash, time, status) => {
+export const addTransaction = async (address, hash, status) => {
     try {
         const newTx = new transactionModel({
             address: address,
             hash: hash,
-            time: time,
-            status: status,
+            status: status
         });
 
         newTx.save(function (err) {
             if (err) return console.log(err);
-            console.log(newTx, "Saved Successful")
+            console.log(newTx, "Saved Transaction Successful")
         });
     } catch (err) {
-        console.log("error");
+        console.log("error",err);
     }
 };
+
+export const getTransaction = async(hash) => {
+    try {
+        const res = await transactionModel.findOne({ hash: hash })
+        return res
+    } catch (err) {
+            console.log("error", err)
+    }
+}
+
+export const getTransactionByAddress = async(address) => {
+    try {
+        const res = await transactionModel.findOne({ address: address })
+        return res
+    } catch (err) {
+            console.log("error", err)
+    }
+}
+
+export const updateTransaction = async(hash, status) => {
+    try {
+        const filter = {hash: hash}
+        const update = { status: status }
+        const res = await transactionModel.findOneAndUpdate(filter, update, { new: true })
+        return res
+    } catch (err) {
+        console.log("error", err)
+    }
+}
+
+export const deleteTransaction = async(hash) => {
+    if (!hash) return null
+    try {
+        const res = await transactionModel.findOneAndDelete({ hash: hash })
+    } catch (err) {
+        console.log("delete error");
+    }
+}
 
 export const loadUserData = async (address) => {
     if (!address) return null
@@ -150,7 +188,7 @@ export const updatePlayData = async (address, dataResult) => {
     }
 }
 
-export const savePendingData = async (from_address, to_address, ada_balance, dum_balance, nebula_balance,konda_balance, hash, status, action) => {
+export const savePendingData = async (from_address, to_address, ada_balance, dum_balance, nebula_balance, konda_balance, snek_balance, hash, status, action) => {
     if (!from_address && !to_address) return null
     try {
         const newPendingData = new pendingModel({
@@ -160,6 +198,7 @@ export const savePendingData = async (from_address, to_address, ada_balance, dum
             dum_balance: dum_balance,
             nebula_balance: nebula_balance,
             konda_balance: konda_balance,
+            snek_balance: snek_balance,
             hash: hash,
             status: status,
             action: action
