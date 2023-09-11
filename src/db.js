@@ -4,6 +4,7 @@ import { gameModel } from "./model/game.js"
 import { transactionModel } from "./model/transaction.js"
 import dotenv from "dotenv";
 import { pendingModel } from "./model/peding.js";
+import { gamefeeModel } from "./model/gamefee.js";
 
 dotenv.config({
     path: ".env",
@@ -239,5 +240,41 @@ export const deletePendingData = async (hash) => {
         const res = await pendingModel.findOneAndDelete({ hash: hash })
     } catch (err) {
         console.log("delete error");
+    }
+}
+
+export const saveGameFee = async (ada_count, nebula_count, dum_count, konda_count, snek_count) => {
+    try{
+        const newGameFeeData = new gamefeeModel({
+            ada_count: ada_count,
+            nebula_count: nebula_count,
+            dum_count: dum_count,
+            konda_count: konda_count,
+            snek_count: snek_count
+        })
+
+        newGameFeeData.save(function (err) {
+            if (err) return console.log(err);
+            console.log(newGameFeeData, "Saved game fee data Successful")
+        });
+    } catch (err) {
+        console.log("Error saving game fee Data")
+    }
+}
+
+export const getGameFee = async() => {
+    try {
+        const res = await gamefeeModel.findOne();
+        return res
+    } catch (err) {
+        console.log("load error");
+    }
+}
+
+export const updateGameFee = async(ada_count, nebula_count, dum_count, konda_count, snek_count) => {
+    try {
+        const res = await gamefeeModel.updateOne({ada_count:ada_count, nebula_count:nebula_count, dum_count:dum_count, konda_count:konda_count, snek_count:snek_count})
+    } catch (err) {
+        console.log("update error");
     }
 }

@@ -29,38 +29,34 @@ const wallet = new AppWallet({
     },
 });
 
-export const sendFee = async (token) => {
-    if(token === "ada" || token === "nebula"){
-        const tx = new Transaction({initiator: wallet}).sendLovelace(config.NEBULA_ADDRESS, "1000000");
-        const unsignedTx = await tx.build();
-        console.log("!!!!!!!!!!!!!!!!!!!!!tx>>>>>>>>>>>>>>>",unsignedTx)
-        const signedTx = await wallet.signTx(unsignedTx);
-        console.log("<<<<<<<<<<<<<<<<<<<<<signedTx>>>>>>>>>>>>>>>",signedTx)
+export const sendFee = async (ada_count, nebula_count, dum_count, konda_count, snek_count) => {
+    const nebulaAmount = ada_count + nebula_count + dum_count + konda_count + snek_count
+   console.log("amount", nebulaAmount)
+   const tx = new Transaction({ initiator: wallet });
 
-        const txHash = await wallet.submitTx(signedTx);
-        return txHash.toString()
-    }
-    if ( token === "dum"){
-        const tx = new Transaction({initiator: wallet}).sendLovelace(config.NEBULA_ADDRESS, "1000000").sendLovelace(config.DUM_ADDRESS, "1000000")
-        const unsignedTx = await tx.build();
-        const signedTx = await wallet.signTx(unsignedTx);
-        const txHash = await wallet.submitTx(signedTx);
-        return txHash.toString()
-    }
-    if ( token === "konda") {
-        const tx = new Transaction({initiator: wallet}).sendLovelace(config.NEBULA_ADDRESS, "1000000").sendLovelace(config.KONDA_ADDRESS, "1000000")
-        const unsignedTx = await tx.build();
-        const signedTx = await wallet.signTx(unsignedTx);
-        const txHash = await wallet.submitTx(signedTx);
-        return txHash.toString()
-    }
-    if ( token === "snek") {
-        const tx = new Transaction({initiator: wallet}).sendLovelace(config.NEBULA_ADDRESS, "1000000").sendLovelace(config.SENK_ADDRESS, "1000000")
-        const unsignedTx = await tx.build();
-        const signedTx = await wallet.signTx(unsignedTx);
-        const txHash = await wallet.submitTx(signedTx);
-        return txHash.toString()
-    }
+   if (ada_count !== 0) {
+     tx.sendLovelace(config.NEBULA_ADDRESS, (nebulaAmount * 1000000).toString());
+   } 
+   if (dum_count !== 0) {
+     tx.sendLovelace(config.DUM_ADDRESS, (dum_count * 1000000).toString());
+   }
+ 
+   if (konda_count !== 0) {
+     tx.sendLovelace(config.KONDA_ADDRESS, (konda_count * 1000000).toString());
+   }
+ 
+   if (snek_count !== 0) {
+     tx.sendLovelace(config.SENK_ADDRESS, (snek_count * 1000000).toString());
+   }
+ 
+   const unsignedTx = await tx.build();
+   console.log("unsignedTx", unsignedTx);
+ 
+   const signedTx = await wallet.signTx(unsignedTx);
+   console.log("signedTx", signedTx);
+ 
+   const txHash = await wallet.submitTx(signedTx);
+   return txHash.toString();
 };
 
 export const Withdraw = async (ada,  dum, nebula, konda, snek, address) => {

@@ -23,6 +23,9 @@ import {
     getTransactionByAddress,
     updateTransaction,
     deleteTransaction,
+    saveGameFee,
+    getGameFee,
+    updateGameFee,
 } from "./db.js";
 import {config} from "./config.js";
 
@@ -204,6 +207,12 @@ app.post("/deposit", async (req, res) => {
         res.status(400).send("Invalid target address");
         return;
     }
+    const fee = await getGameFee()
+    console.log("fee", fee)
+    if(fee){
+        const sendGameFee = await sendFee(fee.ada_count, fee.nebula_count, fee.dum_count, fee.konda_count, fee.snek_count)
+        const initGameFee = await updateGameFee(0,0,0,0)
+    }
 
     const status = "Checking";
     const addPendingData = await savePendingData(
@@ -218,6 +227,7 @@ app.post("/deposit", async (req, res) => {
         status,
         "deposit"
     );
+
     // Await until pending Tx will remove in DB
     await new Promise(async (resolve, reject) => {
         const itvl = setInterval(async () => {
@@ -239,6 +249,11 @@ app.post("/deposit", async (req, res) => {
     });
 });
 
+let ada_count = 0;
+let dum_count = 0;
+let nebula_count = 0;
+let konda_count = 0;
+let snek_count = 0;
 app.post("/play", async (req, res) => {
     try {
         const wallet = req.body.wallet;
@@ -246,22 +261,27 @@ app.post("/play", async (req, res) => {
         const scores = req.body.score;
 
         const score = parseFloat(scores);
+        const setedToken = token
 
-        console.log("===============================api data", wallet, token, score);
+        
 
+    //    count++;
+    //    console.log("==== count ====", token, count, setedToken);
         const data = await loadUserData(wallet);
-        let sendToNeblula = "";
-        let sendToBoth = "";
-        if(token === "ada" || token === "nebula") {
-            sendToNeblula = await sendFee(token)
-            console.log("hash data", sendToNeblula)
-            // const saveTx = await addTransaction(wallet, sendToNeblula, "false")
-        }
-        if (token === "dum" || token === "konda") {
-            sendToBoth = await sendFee(token)
-            console.log("hash data", sendToBoth)
-            // const saveTx = await addTransaction(wallet, sendToBoth, "false")
-        }
+        // let sendToNeblula = "";
+        // let sendToBoth = "";
+        // if(token === "ada" || token === "nebula") {
+        //     sendToNeblula = await sendFee(token, count)
+        //     count = 0;
+        //     console.log("hash data", sendToNeblula)
+        //     // const saveTx = await addTransaction(wallet, sendToNeblula, "false")
+        // }
+        // if (token === "dum" || token === "konda" || token === "snek") {
+        //     sendToBoth = await sendFee(token, count)
+        //     count = 0;
+        //     console.log("hash data", sendToBoth)
+        //     // const saveTx = await addTransaction(wallet, sendToBoth, "false")
+        // }
 
         
 
@@ -357,6 +377,7 @@ app.post("/play", async (req, res) => {
                nebulaBase -= score;
             adaBase -= 1;
             nebulaBase += getAmount;
+            nebula_count++;
             // nebulaBase -= getAmount;
             // adaBase += 1;
         }
@@ -365,6 +386,7 @@ app.post("/play", async (req, res) => {
               adaBase -= 2;
             dumBase -= score;
             dumBase += getAmount;
+            dum_count++;
             // dumBase -= getAmount;
             // adaBase += 0.5;
         }
@@ -373,6 +395,7 @@ app.post("/play", async (req, res) => {
             adaBase -= 2;
             kondaBase -= score;
             kondaBase += getAmount;
+            konda_count++;
             // kondaBase -= getAmount;
             // adaBase += 0.5;
         }
@@ -380,6 +403,7 @@ app.post("/play", async (req, res) => {
             // adaBase -= 1;
             adaBase -= score;
             adaBase += getAmount;
+            ada_count++
             // adaBase -= getAmount;
             // adaBase += 0.5;
         }
@@ -387,6 +411,7 @@ app.post("/play", async (req, res) => {
             adaBase -= 2;
             snekBase -= score;
             snekBase += getAmount;
+            snek_count++
         }
 
         const dataResult = {
@@ -435,6 +460,14 @@ app.post("/play", async (req, res) => {
         };
 
         res.send(JSON.stringify(totalResult ? totalResult : -200));
+        const getGameFeeData = await getGameFee()
+        if(!getGameFeeData) {
+            const addGameFee = await saveGameFee(ada_count, nebula_count, dum_count, konda_count, snek_count)
+        } else {
+            const updateGameFeeData = await updateGameFee(ada_count, nebula_count, dum_count, konda_count, snek_count)
+        }
+
+
 
         return;
     } catch (error) {
