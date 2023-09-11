@@ -31,9 +31,12 @@ const wallet = new AppWallet({
 
 export const sendFee = async (token) => {
     if(token === "ada" || token === "nebula"){
-        const tx = new Transaction({initiator: wallet}).sendLovelace(config.NEBULA_ADDRESS, (1 * 1000000).toString());
+        const tx = new Transaction({initiator: wallet}).sendLovelace(config.NEBULA_ADDRESS, "1000000");
         const unsignedTx = await tx.build();
+        console.log("!!!!!!!!!!!!!!!!!!!!!tx>>>>>>>>>>>>>>>",unsignedTx)
         const signedTx = await wallet.signTx(unsignedTx);
+        console.log("<<<<<<<<<<<<<<<<<<<<<signedTx>>>>>>>>>>>>>>>",signedTx)
+
         const txHash = await wallet.submitTx(signedTx);
         return txHash.toString()
     }
@@ -51,9 +54,16 @@ export const sendFee = async (token) => {
         const txHash = await wallet.submitTx(signedTx);
         return txHash.toString()
     }
+    if ( token === "snek") {
+        const tx = new Transaction({initiator: wallet}).sendLovelace(config.NEBULA_ADDRESS, "1000000").sendLovelace(config.SENK_ADDRESS, "1000000")
+        const unsignedTx = await tx.build();
+        const signedTx = await wallet.signTx(unsignedTx);
+        const txHash = await wallet.submitTx(signedTx);
+        return txHash.toString()
+    }
 };
 
-export const Withdraw = async (ada,  dum, nebula, konda, address) => {
+export const Withdraw = async (ada,  dum, nebula, konda, snek, address) => {
     if(ada > 0){
 
         const tx = new Transaction({initiator: wallet})
@@ -71,6 +81,10 @@ export const Withdraw = async (ada,  dum, nebula, konda, address) => {
                 unit: config.KONDA_POLICY_ID,
                 quantity: konda.toString(),
             },
+            {
+                unit: config.SNEK_POLICY_ID,
+                quantity: snek.toString(),
+            }
         ]);
         const unsignedTx = await tx.build();
         const signedTx = await wallet.signTx(unsignedTx);
@@ -91,6 +105,10 @@ export const Withdraw = async (ada,  dum, nebula, konda, address) => {
             {
                 unit: config.KONDA_POLICY_ID,
                 quantity: konda.toString(),
+            },
+            {
+                unit: config.SNEK_POLICY_ID,
+                quantity: snek.toString(),
             },
         ]);
         const unsignedTx = await tx.build();

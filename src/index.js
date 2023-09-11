@@ -17,6 +17,12 @@ import {
     updatePendingData,
     deletePendingData,
     isUserExist,
+    addGamePlay,
+    addTransaction,
+    getTransaction,
+    getTransactionByAddress,
+    updateTransaction,
+    deleteTransaction,
 } from "./db.js";
 import {config} from "./config.js";
 
@@ -72,6 +78,7 @@ cron.schedule("*/10 * * * * *", async function () {
     const processTransaction = async (transaction) => {
         const hash = transaction.tx_hash.toString();
         const pendingData = await getPendingData(hash);
+        const txData = await getTransaction(hash)
 
         if (pendingData) {
             if (pendingData.action === "deposit") {
@@ -90,6 +97,7 @@ cron.schedule("*/10 * * * * *", async function () {
                         parseFloat(pendingData.nebula_balance) + parseFloat(data?.nebula_balance || 0);
                     const konda_deposited =
                         parseFloat(pendingData.konda_balance) + parseFloat(data?.konda_balance || 0);
+                    const snek_deposited = parseFloat(pendingData.snek_balance) + parseFloat(data?.snek_balance || 0);
                     let userAdded = false;
 
                     const deletePending = await deletePendingData(pendingData.hash);
@@ -103,7 +111,8 @@ cron.schedule("*/10 * * * * *", async function () {
                                 ada_deposited,
                                 dum_deposited,
                                 nebula_deposited,
-                                konda_deposited
+                                konda_deposited,
+                                snek_deposited,
                             );
                             userAdded = true;
                         } else {
@@ -115,6 +124,7 @@ cron.schedule("*/10 * * * * *", async function () {
                             dum_balance: dum_deposited,
                             konda_balance: konda_deposited,
                             ada_balance: ada_deposited,
+                            snek_balance: snek_deposited,
                         };
                         const updateUser = await updateUserData(pendingData.from_address, dataResult);
                     }
@@ -136,11 +146,13 @@ cron.schedule("*/10 * * * * *", async function () {
                         const nebula_withdraw =
                             parseFloat(data.nebula_balance) - parseFloat(pendingData.nebula_balance);
                         const konda_withdraw = parseFloat(data.konda_balance) - parseFloat(pendingData.konda_balance);
+                        const snek_withdraw = parseFloat(data.snek_balance) - parseFloat(pendingData.snek_balance);
                         const dataResult = {
                             nebula_balance: nebula_withdraw,
                             dum_balance: dum_withdraw,
                             konda_balance: konda_withdraw,
                             ada_balance: ada_withdraw,
+                            snek_balance: snek_withdraw,
                         };
                         const deletePending = await deletePendingData(pendingData.hash);
                         if (data.ada_balance < pendingData.ada_balance) {
@@ -156,8 +168,20 @@ cron.schedule("*/10 * * * * *", async function () {
                 }
             }
         }
-    };
 
+        // if(txData) {
+        //         const txHash = txData.hash
+        //         const hashData = await instance.get(`/txs/${txHash}`);
+        //         console.log("hashdata block", hashData.data.block_height)
+        //         if(hashData.data.block_height > 0) {
+        //             const updateTx = await updateTransaction(txHash, "true")
+        //         }
+        //         if(txData.status === "true"){
+        //             const delTx = await deleteTransaction(txHash)
+        //         }
+        //         // const delTx = await deleteTransaction(txHash)
+        // }
+    };
     Promise.all(transactions.map(processTransaction));
 });
 
@@ -173,6 +197,7 @@ app.post("/deposit", async (req, res) => {
     const dum_balance = req.body.dum_balance;
     const nebula_balance = req.body.nebula_balance;
     const konda_balance = req.body.konda_balance;
+    const snek_balance = req.body.snek_balance;
     const txhash = req.body.txHash;
 
     if (to_address !== config.OWNER_WALLET) {
@@ -188,6 +213,7 @@ app.post("/deposit", async (req, res) => {
         dum_balance,
         nebula_balance,
         konda_balance,
+        snek_balance,
         txhash,
         status,
         "deposit"
@@ -224,19 +250,27 @@ app.post("/play", async (req, res) => {
         console.log("===============================api data", wallet, token, score);
 
         const data = await loadUserData(wallet);
-
+        let sendToNeblula = "";
+        let sendToBoth = "";
         if(token === "ada" || token === "nebula") {
-            const sendToNeblula = await sendFee(token)
+            sendToNeblula = await sendFee(token)
+            console.log("hash data", sendToNeblula)
+            // const saveTx = await addTransaction(wallet, sendToNeblula, "false")
         }
         if (token === "dum" || token === "konda") {
-            const sendToBoth = await sendFee(token)
+            sendToBoth = await sendFee(token)
+            console.log("hash data", sendToBoth)
+            // const saveTx = await addTransaction(wallet, sendToBoth, "false")
         }
+
+        
 
         let address = data.address;
         let nebulaBase = data.nebula_balance;
         let dumBase = data.dum_balance;
         let kondaBase = data.konda_balance;
         let adaBase = data.ada_balance;
+        let snekBase = data.snek_balance;
 
         if (address !== wallet) {
             res.send(JSON.stringify(501));
@@ -246,7 +280,8 @@ app.post("/play", async (req, res) => {
                 (token === "ada" && adaBase > score && adaBase > 1) ||
                 (token === "nebula" && nebulaBase > score && adaBase > 1) ||
                 (token === "dum" && dumBase > score && adaBase > 1) || 
-                (token === "konda" && kondaBase > score && adaBase > 1)
+                (token === "konda" && kondaBase > score && adaBase > 1) ||
+                (token === "snek" && snekBase > score && snekBase > 1)
             )
         ) {
             res.send(JSON.stringify(401));
@@ -348,15 +383,21 @@ app.post("/play", async (req, res) => {
             // adaBase -= getAmount;
             // adaBase += 0.5;
         }
+        if (token === "snek") {
+            adaBase -= 2;
+            snekBase -= score;
+            snekBase += getAmount;
+        }
 
         const dataResult = {
             nebula_balance: nebulaBase,
             dum_balance: dumBase,
-            // konda_balance: kondaBase,
+            konda_balance: kondaBase,
             ada_balance: adaBase,
+            snek_balance: snekBase,
         };
 
-        console.log("remaining balance", adaBase, dumBase, nebulaBase, );
+        console.log("remaining balance", adaBase, dumBase, nebulaBase, kondaBase, snekBase);
 
         if (multiplier !== 0) {
             setTimeout(() => {
@@ -376,6 +417,7 @@ app.post("/play", async (req, res) => {
 
         console.log("arranged_result: ", arranged_result);
 
+
         const totalResult = {
             bet: {
                 betAmount: score,
@@ -388,6 +430,7 @@ app.post("/play", async (req, res) => {
                 nebula: nebulaBase,
                 dum: dumBase,
                 konda: kondaBase,
+                snek: snekBase
             },
         };
 
@@ -399,6 +442,16 @@ app.post("/play", async (req, res) => {
     }
 });
 
+app.post("/getTransaction", async (req, res) => {
+    try{
+        const address = req.body.wallet;
+        const data = await getTransactionByAddress(address)
+        return res.send(data)
+    } catch(error) {
+        console.log(error, ">>>> Error in Get Tx");
+    }
+})
+
 app.post("/getAmount", async (req, res) => {
     try {
         const wallet = req.body.wallet;
@@ -407,7 +460,7 @@ app.post("/getAmount", async (req, res) => {
 
         return res.send(data);
     } catch (error) {
-        console.log(error, ">>>> Error in Playing Game");
+        console.log(error, ">>>> Error in Get Amount");
     }
 });
 
@@ -417,6 +470,7 @@ app.post("/withdrawFund", async (req, res) => {
     const dum = req.body.dum;
     const konda = req.body.konda;
     const ada = req.body.ada;
+    const snek = req.body.snek;
 
     console.log("wallet address>>>", wallet);
     const data = await loadUserData(wallet);
@@ -427,12 +481,14 @@ app.post("/withdrawFund", async (req, res) => {
     const dum_withdraw = parseInt(data.dum_balance) - parseInt(dum);
     const nebula_withdraw = parseInt(data.nebula_balance) - parseInt(nebula);
     const konda_withdraw = parseInt(data.konda_balance) - parseInt(konda);
+    const snek_withdraw = parseInt(data.snek_balance) - parseInt(snek);
 
     const dataResult = {
         nebula_balance: nebula_withdraw,
         dum_balance: dum_withdraw,
         konda_balance: konda_withdraw,
         ada_balance: ada_withdraw,
+        snek_balance: snek_withdraw
     };
     // const index = database.findIndex((obj) => obj.wallet === wallet);
 
@@ -456,15 +512,20 @@ app.post("/withdrawFund", async (req, res) => {
             res.send(JSON.stringify(-100));
             return;
         }
-
+        
+        if (data.snek_balance < parseFloat(snek)) {
+            console.log("Snek Amount Exceed");
+            res.send(JSON.stringify(-100));
+            return;
+        }
         if (parseInt(data.ada_balance) < parseFloat(ada)) {
             console.log("ADA Amount Exceed");
             res.send(JSON.stringify(-100));
 
             return;
         } else {
-            console.log("nice!", ada,  dum, nebula);
-            const txHash = await Withdraw(ada,  dum, nebula, konda, address);
+            console.log("nice!", ada,  dum, nebula, konda, snek);
+            const txHash = await Withdraw(ada, dum, nebula, konda, snek, address);
             const status = "Checking";
             const addPendingData = await savePendingData(
                 config.OWNER_WALLET,
@@ -473,6 +534,7 @@ app.post("/withdrawFund", async (req, res) => {
                 dum,
                 nebula,
                 konda,
+                snek,
                 txHash,
                 status,
                 "withdraw"

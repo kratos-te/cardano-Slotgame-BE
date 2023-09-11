@@ -4,7 +4,6 @@ const transactionSchema = new mongoose.Schema(
     {
         address: String,
         hash: String,
-        time: String,
         status: String,
     },
     {

@@ -8,7 +8,7 @@ const gameSchema = new mongoose.Schema(
         nebula_balance: Number,
         konda_balance: Number,  
         bet_amount: Number,
-        multiplier:Number
+        multiplier:Number,
     },
     {
         timestamps: {
