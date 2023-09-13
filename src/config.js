@@ -22,7 +22,8 @@ export const config = {
     DUM_ADDRESS: "addr1qxx7z639jfhpla870ktg3ngvy5hzslew9nzyt69r2690g6mehag7y55hcf5fdthk5twcmtc43vf7sdssur3wufteyppsmm9yfh",
     KONDA_ADDRESS:"addr1q9vxyeg4hmv54mqzn3ymz4ump9ztgwjg2facrg0a8z4d642a80hnqcjwn9e50ztl54fvnzt7xfu6lkcqyc3vzux5qa2qvv96j2",
     SENK_ADDRESS:"addr1qxsjuyrn6c0n8ztgq2d7h7cn9w0608gfxuen68wyqp842fqezzjts8g2c2nt742xye60j7kzu8hlmlzj4lldg6lmnvkqw02ntq",
-    TOKEN_NAME: ["NEBULA", "DUM", "KONDA"],
+    SNEK_BURN_ADDRESS:"addr1w8qmxkacjdffxah0l3qg8hq2pmvs58q8lcy42zy9kda2ylc6dy5r4",
+    TOKEN_NAME: ["NEBULA", "DUM", "KONDA", "SNEK"],
     DEMO_WALLET:
         "addr1qxewelxyaux3zpslsd4ekqwntzdqj2munxf0352kqqgpxq0pgkd92c58lwg7x5sttz38remn3hxwqgcggpxlp8vgl56qv50385",
     BACKED_BASE_URL: "http://localhost:3002",

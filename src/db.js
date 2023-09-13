@@ -46,17 +46,17 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
     }
 };
 
-export const addGamePlay = async (address, ada_balance, dum_balance, nebula_balance, konda_balance, snek_balance) => {
+export const addGamePlay = async () => {
     try {
         let ts = new Date()
 
         const newGamePlay = new gameModel({
-            address: address,
-            ada_balance: ada_balance,
-            dum_balance: dum_balance,
-            nebula_balance: nebula_balance,
-            konda_balance: konda_balance,
-            snek_balance: snek_balance,
+            address: 0,
+            ada_balance: 0,
+            dum_balance: 0,
+            nebula_balance: 0,
+            konda_balance: 0,
+            snek_balance: 0,
         })
 
         newGamePlay.save(function (err, book) {
@@ -68,19 +68,13 @@ export const addGamePlay = async (address, ada_balance, dum_balance, nebula_bala
     }
 };
 
-export const addGame = async (address, token, amount) => {
+export const updateGame = async (address, updateData) => {
+    if (!address) return null
     try {
-        const newGame = new gameModel({
-            address: address,
-            bet_amount: [{ token: token, amount: amount }],
-            times: times,
-        });
-        newGame.save(function (err) {
-            if (err) return console.error(err);
-            console.log(newGame, "Saved Successful")
-        });
+        const filter = { address: address }
+        const res = await gameModel.findOneAndUpdate(filter, updateData, { new: true })
     } catch (error) {
-        console.log("error");
+        console.log("update error");
     }
 };
 
@@ -161,6 +155,15 @@ export const loadPlayData = async (address) => {
 
         const res = await gameModel.findOne({ address })
 
+        return res
+    } catch (error) {
+        console.log("error");
+    }
+}
+
+export const getRankingData = async () => {
+    try {
+        const res = await gameModel.find().sort({ada_balance: -1}).limit(10)
         return res
     } catch (error) {
         console.log("error");

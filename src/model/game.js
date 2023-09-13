@@ -7,8 +7,7 @@ const gameSchema = new mongoose.Schema(
         dum_balance: Number,
         nebula_balance: Number,
         konda_balance: Number,  
-        bet_amount: Number,
-        multiplier:Number,
+        snek_balance: Number
     },
     {
         timestamps: {
