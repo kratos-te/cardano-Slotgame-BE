@@ -88,7 +88,7 @@ export const Withdraw = async (ada, dum, nebula, konda, snek, address) => {
         return txHash.toString();
     } else {
         const tx = new Transaction({initiator: wallet});
-        tx.sendLovelace(address, (1 * 1000000).toString()).sendAssets(address, [
+        tx.sendAssets(address, [
             {
                 unit: config.DUM_POLICY_ID,
                 quantity: (dum * 100).toString(),
