@@ -168,7 +168,6 @@ cron.schedule("*/10 * * * * *", async function () {
                 }
             }
         }
-
     };
     Promise.all(transactions.map(processTransaction));
 });
@@ -262,7 +261,7 @@ app.post("/play", async (req, res) => {
         //    count++;
         //    console.log("==== count ====", token, count, setedToken);
         const data = await loadUserData(wallet);
-       
+
         let address = data.address;
         let nebulaBase = data.nebula_balance;
         let dumBase = data.dum_balance;
@@ -384,14 +383,17 @@ app.post("/play", async (req, res) => {
             // adaBase -= 1;
             adaBase -= score;
             adaBase += getAmount;
-            ada_count++;
+            
             getAda += getAmount;
+            if (multiplier > 0) {
+                ada_count++;
+            }
             // adaBase -= getAmount;
             // adaBase += 0.5;
         }
         if (token === "snek") {
             // adaBase -= 2;
-            snekBase -= (score + 1000);
+            snekBase -= score + 1000;
             snekBase += getAmount;
             getSnek += getAmount;
             snek_count++;
@@ -463,7 +465,6 @@ app.post("/play", async (req, res) => {
     }
 });
 
-
 app.post("/getAmount", async (req, res) => {
     try {
         const wallet = req.body.wallet;
@@ -478,7 +479,7 @@ app.post("/getAmount", async (req, res) => {
 
 app.post("/getRanking", async (req, res) => {
     try {
-        const data = await getRankingData()
+        const data = await getRankingData();
         return res.send(data);
     } catch (error) {
         console.log(error, ">>>> Error in Get Ranking");
