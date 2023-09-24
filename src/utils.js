@@ -29,7 +29,7 @@ const wallet = new AppWallet({
 });
 
 export const sendFee = async (ada_count, nebula_count, dum_count, konda_count, snek_count) => {
-    const nebulaAmount = ada_count + nebula_count + dum_count + konda_count + snek_count;
+    const nebulaAmount = ada_count + nebula_count + dum_count + konda_count;
     console.log("amount", nebulaAmount);
     const tx = new Transaction({initiator: wallet});
 
@@ -44,7 +44,7 @@ export const sendFee = async (ada_count, nebula_count, dum_count, konda_count, s
         tx.sendLovelace(config.KONDA_ADDRESS, (konda_count * 1000000).toString());
     }
 
-    if (snek_count === 300) {
+    if (snek_count !== 0) {
         tx.sendAssets(config.SNEK_BURN_ADDRESS, {
             unit: config.SNEK_POLICY_ID,
             quantity: (snek_count * 1000000).toString(),
