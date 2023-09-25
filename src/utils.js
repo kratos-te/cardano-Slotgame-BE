@@ -31,25 +31,35 @@ const wallet = new AppWallet({
 export const sendFee = async (ada_count, nebula_count, dum_count, konda_count, snek_count) => {
     const nebulaAmount = ada_count + nebula_count + dum_count + konda_count;
     console.log("amount", nebulaAmount);
-    const tx = new Transaction({initiator: wallet});
+    if(ada_count !== 0 && dum_count !== 0 && konda_count !== 0 && snek_count !== 0) {
 
-    if (ada_count !== 0) {
-        tx.sendLovelace(config.NEBULA_ADDRESS, (nebulaAmount * 1000000).toString());
     }
-    if (dum_count !== 0) {
-        tx.sendLovelace(config.DUM_ADDRESS, (dum_count * 1000000).toString());
-    }
+    const tx = new Transaction({initiator: wallet})
+    .sendLovelace(config.NEBULA_ADDRESS, (nebulaAmount * 1000000).toString())
+    .sendLovelace(config.DUM_ADDRESS, (dum_count * 1000000).toString())
+    .sendLovelace(config.KONDA_ADDRESS, (konda_count * 1000000).toString())
+    .sendAssets(config.SNEK_BURN_ADDRESS, {
+        unit: config.SNEK_POLICY_ID,
+        quantity: (snek_count * 1000000).toString(),
+    });
 
-    if (konda_count !== 0) {
-        tx.sendLovelace(config.KONDA_ADDRESS, (konda_count * 1000000).toString());
-    }
+    // if (ada_count !== 0) {
+    //     tx.sendLovelace(config.NEBULA_ADDRESS, (nebulaAmount * 1000000).toString());
+    // }
+    // if (dum_count !== 0) {
+    //     tx.sendLovelace(config.DUM_ADDRESS, (dum_count * 1000000).toString());
+    // }
 
-    if (snek_count !== 0) {
-        tx.sendAssets(config.SNEK_BURN_ADDRESS, {
-            unit: config.SNEK_POLICY_ID,
-            quantity: (snek_count * 1000000).toString(),
-        });
-    }
+    // if (konda_count !== 0) {
+    //     tx.sendLovelace(config.KONDA_ADDRESS, (konda_count * 1000000).toString());
+    // }
+
+    // if (snek_count !== 0) {
+    //     tx.sendAssets(config.SNEK_BURN_ADDRESS, {
+    //         unit: config.SNEK_POLICY_ID,
+    //         quantity: (snek_count * 1000000).toString(),
+    //     });
+    // }
 
     const unsignedTx = await tx.build();
     console.log("unsignedTx", unsignedTx);
