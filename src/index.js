@@ -201,7 +201,9 @@ app.post("/deposit", async (req, res) => {
             fee.konda_count,
             fee.snek_count
         );
-        const initGameFee = await updateGameFee(0, 0, 0, 0);
+        if (sendGameFee){
+            const initGameFee = await updateGameFee(0, 0, 0, 0);
+        }
     }
 
     const status = "Checking";
