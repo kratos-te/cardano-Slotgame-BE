@@ -46,129 +46,135 @@ export const addUser = async (address, ada_balance, dum_balance, nebula_balance,
     }
 };
 
-export const addGamePlay = async () => {
-    try {
-        let ts = new Date()
+export const addGamePlay = async (address) => {
+  try {
+    let ts = new Date();
 
-        const newGamePlay = new gameModel({
-            address: 0,
-            ada_balance: 0,
-            dum_balance: 0,
-            nebula_balance: 0,
-            konda_balance: 0,
-            snek_balance: 0,
-        })
+    const newGamePlay = new gameModel({
+      address: address,
+      ada_balance: 0,
+      dum_balance: 0,
+      nebula_balance: 0,
+      konda_balance: 0,
+      snek_balance: 0,
+    });
 
-        newGamePlay.save(function (err, book) {
-            if (err) return console.error(err);
-            console.log(newGamePlay, "Saved Successful")
-        })
-    } catch (error) {
-        console.log("error");
-    }
+    newGamePlay.save(function (err, book) {
+      if (err) return console.error(err);
+      console.log(newGamePlay, "Saved Successful");
+    });
+  } catch (error) {
+    console.log("error");
+  }
 };
 
 export const updateGame = async (address, updateData) => {
-    if (!address) return null
-    try {
-        const filter = { address: address }
-        const res = await gameModel.findOneAndUpdate(filter, updateData, { new: true })
-    } catch (error) {
-        console.log("update error");
-    }
+  if (!address) return null;
+  try {
+    const filter = { address: address };
+    const res = await gameModel.findOneAndUpdate(filter, updateData, {
+      new: true,
+    });
+  } catch (error) {
+    console.log("update error");
+  }
 };
 
 export const addTransaction = async (address, hash, status) => {
-    try {
-        const newTx = new transactionModel({
-            address: address,
-            hash: hash,
-            status: status
-        });
+  try {
+    const newTx = new transactionModel({
+      address: address,
+      hash: hash,
+      status: status,
+    });
 
-        newTx.save(function (err) {
-            if (err) return console.log(err);
-            console.log(newTx, "Saved Transaction Successful")
-        });
-    } catch (err) {
-        console.log("error",err);
-    }
+    newTx.save(function (err) {
+      if (err) return console.log(err);
+      console.log(newTx, "Saved Transaction Successful");
+    });
+  } catch (err) {
+    console.log("error", err);
+  }
 };
 
-export const getTransaction = async(hash) => {
-    try {
-        const res = await transactionModel.findOne({ hash: hash })
-        return res
-    } catch (err) {
-            console.log("error", err)
-    }
-}
+export const getTransaction = async (hash) => {
+  try {
+    const res = await transactionModel.findOne({ hash: hash });
+    return res;
+  } catch (err) {
+    console.log("error", err);
+  }
+};
 
-export const getTransactionByAddress = async(address) => {
-    try {
-        const res = await transactionModel.findOne({ address: address })
-        return res
-    } catch (err) {
-            console.log("error", err)
-    }
-}
+export const getTransactionByAddress = async (address) => {
+  try {
+    const res = await transactionModel.findOne({ address: address });
+    return res;
+  } catch (err) {
+    console.log("error", err);
+  }
+};
 
-export const updateTransaction = async(hash, status) => {
-    try {
-        const filter = {hash: hash}
-        const update = { status: status }
-        const res = await transactionModel.findOneAndUpdate(filter, update, { new: true })
-        return res
-    } catch (err) {
-        console.log("error", err)
-    }
-}
+export const updateTransaction = async (hash, status) => {
+  try {
+    const filter = { hash: hash };
+    const update = { status: status };
+    const res = await transactionModel.findOneAndUpdate(filter, update, {
+      new: true,
+    });
+    return res;
+  } catch (err) {
+    console.log("error", err);
+  }
+};
 
-export const deleteTransaction = async(hash) => {
-    if (!hash) return null
-    try {
-        const res = await transactionModel.findOneAndDelete({ hash: hash })
-    } catch (err) {
-        console.log("delete error");
-    }
-}
+export const deleteTransaction = async (hash) => {
+  if (!hash) return null;
+  try {
+    const res = await transactionModel.findOneAndDelete({ hash: hash });
+  } catch (err) {
+    console.log("delete error");
+  }
+};
 
 export const loadUserData = async (address) => {
-    if (!address) return null
-    try {
-        const res = await usersModel.findOne({ address })
-        return res
-    } catch (error) {
-        console.log("error");
-    }
-}
+  if (!address) return null;
+  try {
+    const res = await usersModel.findOne({ address });
+    return res;
+  } catch (error) {
+    console.log("error");
+  }
+};
 
 export const isUserExist = async (address) => {
-    // replace this with your own database query
-    const user = await usersModel.findOne({ address });
-    return !!user; // return true if user exists, false otherwise
+  // replace this with your own database query
+  const user = await usersModel.findOne({ address });
+  return !!user; // return true if user exists, false otherwise
 };
 
 export const loadPlayData = async (address) => {
-    if (!address) return null
-    try {
+  if (!address) return null;
+  try {
+    const res = await gameModel.findOne({ address });
 
-        const res = await gameModel.findOne({ address })
-
-        return res
-    } catch (error) {
-        console.log("error");
-    }
-}
+    return res;
+  } catch (error) {
+    console.log("error");
+  }
+};
 
 export const getRankingData = async () => {
-    try {
-        const res = await gameModel.find().sort({ada_balance: -1}).limit(10)
-        return res
-    } catch (error) {
-        console.log("error");
-    }
-}
+  try {
+    // const res = await gameModel.find().sort({ada_balance: -1}).limit(10)
+    const res = await gameModel.find({});
+
+    console.log("ranking", res.data);
+    return res;
+  } catch (error) {
+    console.log("error");
+  }
+};
 
 
 export const updateUserData = async (address, dataResult) => {
