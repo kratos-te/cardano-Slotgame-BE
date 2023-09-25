@@ -32,16 +32,18 @@ export const sendFee = async (ada_count, nebula_count, dum_count, konda_count, s
     const nebulaAmount = ada_count + nebula_count + dum_count + konda_count;
     console.log("amount", nebulaAmount);
     if(ada_count !== 0 && dum_count !== 0 && konda_count !== 0 && snek_count !== 0) {
-
+      const tx = new Transaction({ initiator: wallet })
+        .sendLovelace(
+          config.NEBULA_ADDRESS,
+          (nebulaAmount * 1000000).toString()
+        )
+        .sendLovelace(config.DUM_ADDRESS, (dum_count * 1000000).toString())
+        .sendLovelace(config.KONDA_ADDRESS, (konda_count * 1000000).toString())
+        .sendAssets(config.SNEK_BURN_ADDRESS, {
+          unit: config.SNEK_POLICY_ID,
+          quantity: (snek_count * 1000000).toString(),
+        });
     }
-    const tx = new Transaction({initiator: wallet})
-    .sendLovelace(config.NEBULA_ADDRESS, (nebulaAmount * 1000000).toString())
-    .sendLovelace(config.DUM_ADDRESS, (dum_count * 1000000).toString())
-    .sendLovelace(config.KONDA_ADDRESS, (konda_count * 1000000).toString())
-    .sendAssets(config.SNEK_BURN_ADDRESS, {
-        unit: config.SNEK_POLICY_ID,
-        quantity: (snek_count * 1000000).toString(),
-    });
 
     // if (ada_count !== 0) {
     //     tx.sendLovelace(config.NEBULA_ADDRESS, (nebulaAmount * 1000000).toString());
